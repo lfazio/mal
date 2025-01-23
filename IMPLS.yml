@@ -84,6 +84,7 @@ IMPL:
   - {IMPL: ruby}
   - {IMPL: ruby.2}
   - {IMPL: rust}
+  - {IMPL: rust.2}
   - {IMPL: scala}
   - {IMPL: scheme, scheme_MODE: chibi}
   - {IMPL: scheme, scheme_MODE: kawa}

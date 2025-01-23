@@ -1,0 +1,11 @@
+[package]
+name = "mal"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+rustyline = "14.0.0"
+
+[[bin]]
+name = "step0_repl"
+path = "src/step0_repl.rs"
