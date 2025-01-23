@@ -10,6 +10,7 @@ use error::MalError;
 mod types;
 use types::MalVal;
 
+#[allow(non_snake_case)]
 fn EVAL(input: Result<MalVal, MalError>) -> Result<MalVal, MalError> {
     input
 }

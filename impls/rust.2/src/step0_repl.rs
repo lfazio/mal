@@ -18,6 +18,7 @@ impl fmt::Display for MalError {
     }
 }
 
+#[allow(non_snake_case)]
 fn READ<'a>(rl: &'a mut DefaultEditor, prompt: &'a str) -> Result<String, MalError> {
     match rl.readline(prompt) {
         Ok(line) => {
@@ -33,10 +34,12 @@ fn READ<'a>(rl: &'a mut DefaultEditor, prompt: &'a str) -> Result<String, MalErr
     }
 }
 
+#[allow(non_snake_case)]
 fn EVAL(input: Result<String, MalError>) -> Result<String, MalError> {
     input
 }
 
+#[allow(non_snake_case)]
 fn PRINT(output: Result<String, MalError>) -> bool {
     match output {
         Ok(result) => println!("{}", result),

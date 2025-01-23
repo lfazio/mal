@@ -15,6 +15,31 @@ pub fn print(output: Result<MalVal, MalError>) -> bool {
     true
 }
 
-fn pr_str<'a>(ast: &'a MalVal) -> String {
+fn pr_str(ast: &MalVal) -> String {
     format!("{}", ast)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::MalError;
+    use crate::MalVal;
+
+    #[test]
+    fn test_print_ok() {
+        let output = Ok(MalVal::Int(42));
+        assert!(print(output));
+    }
+
+    #[test]
+    fn test_print_error() {
+        let output = Err(MalError::Error("something went wrong".to_string()));
+        assert!(print(output));
+    }
+
+    #[test]
+    fn test_print_break() {
+        let output = Err(MalError::Break("CTRL-C".to_string()));
+        assert!(!print(output));
+    }
 }

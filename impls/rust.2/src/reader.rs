@@ -1,4 +1,6 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::vec::Vec;
 
 use regex::Regex;
@@ -33,7 +35,7 @@ impl Reader {
     }
 }
 
-pub fn read<'a>(rl: &'a mut DefaultEditor, prompt: &'a str) -> Result<MalVal, MalError> {
+pub fn read(rl: &mut DefaultEditor, prompt: &str) -> Result<MalVal, MalError> {
     match rl.readline(prompt) {
         Ok(line) => {
             let _ = rl.add_history_entry(line.as_str());
@@ -48,20 +50,14 @@ pub fn read<'a>(rl: &'a mut DefaultEditor, prompt: &'a str) -> Result<MalVal, Ma
     }
 }
 
-fn read_str<'a>(line: &'a str) -> Result<MalVal, MalError> {
-    let tokens = match tokenise(line) {
-        Ok(t) => t,
-        Err(e) => return Err(e),
-    };
+fn read_str(line: &str) -> Result<MalVal, MalError> {
+    let tokens = tokenise(line)?;
 
     if tokens.is_empty() {
         return Err(MalError::Error("no input".to_string()));
     }
 
-    read_form(&mut Reader {
-        tokens: tokens,
-        pos: 0,
-    })
+    read_form(&mut Reader { tokens, pos: 0 })
 }
 
 fn tokenise(line: &str) -> Result<Vec<String>, MalError> {
@@ -87,7 +83,8 @@ fn unescape_str(s: &str) -> String {
 
     re.replace_all(s, |caps: &regex::Captures| {
         if &caps[1] == "n" { "\n" } else { &caps[1] }.to_string()
-    }).to_string()
+    })
+    .to_string()
 }
 
 fn read_form(rdr: &mut Reader) -> Result<MalVal, MalError> {
@@ -95,29 +92,48 @@ fn read_form(rdr: &mut Reader) -> Result<MalVal, MalError> {
     match token {
         "'" => {
             rdr.skip();
-            Ok(MalVal::List(vec![MalVal::Symbol("quote".to_string()), read_form(rdr)?]))
-        },
+            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+                MalVal::Symbol("quote".to_string()),
+                read_form(rdr)?,
+            ]))))
+        }
         "`" => {
             rdr.skip();
-            Ok(MalVal::List(vec![MalVal::Symbol("quasiquote".to_string()), read_form(rdr)?]))
-        },
+            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+                MalVal::Symbol("quasiquote".to_string()),
+                read_form(rdr)?,
+            ]))))
+        }
         "~" => {
             rdr.skip();
-            Ok(MalVal::List(vec![MalVal::Symbol("unquote".to_string()), read_form(rdr)?]))
-        },
+            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+                MalVal::Symbol("unquote".to_string()),
+                read_form(rdr)?,
+            ]))))
+        }
         "~@" => {
             rdr.skip();
-            Ok(MalVal::List(vec![MalVal::Symbol("splice-unquote".to_string()), read_form(rdr)?]))
-        },
+            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+                MalVal::Symbol("splice-unquote".to_string()),
+                read_form(rdr)?,
+            ]))))
+        }
         "^" => {
             rdr.skip();
             let meta = read_form(rdr)?;
-            Ok(MalVal::List(vec![MalVal::Symbol("with-meta".to_string()), read_form(rdr)?, meta]))
-        },
-        "@" =>  {
+            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+                MalVal::Symbol("with-meta".to_string()),
+                read_form(rdr)?,
+                meta,
+            ]))))
+        }
+        "@" => {
             rdr.skip();
-            Ok(MalVal::List(vec![MalVal::Symbol("deref".to_string()), read_form(rdr)?]))
-        },
+            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+                MalVal::Symbol("deref".to_string()),
+                read_form(rdr)?,
+            ]))))
+        }
         "(" => read_list(rdr),
         "[" => read_vector(rdr),
         "{" => read_hmap(rdr),
@@ -129,8 +145,8 @@ fn read_form(rdr: &mut Reader) -> Result<MalVal, MalError> {
 }
 
 fn read_seq(rdr: &mut Reader, c: &str) -> Result<MalVal, MalError> {
-    let mut seq: Vec<MalVal> = vec![];
-    let mut hmap: HashMap<MalVal, MalVal> = HashMap::new();
+    let seq: Rc<RefCell<Vec<MalVal>>> = Rc::new(RefCell::new(vec![]));
+    let hmap: Rc<RefCell<HashMap<String, MalVal>>> = Rc::new(RefCell::new(HashMap::new()));
 
     // Skip opening symbol: {/[/(
     rdr.skip();
@@ -141,17 +157,28 @@ fn read_seq(rdr: &mut Reader, c: &str) -> Result<MalVal, MalError> {
             Err(_) => return Err(MalError::Error(format!("expected '{}', got EOF", c))),
         };
 
-
         if token.eq(c) {
             // Skip closing symbol: }/]/)
             rdr.skip();
             break;
         }
 
-        if c == "}" {
-            hmap.insert(read_form(rdr)?, read_form(rdr)?);
-        } else {
-            seq.push(read_form(rdr)?);
+        match c {
+            "}" => {
+                let k = match read_form(rdr) {
+                    Ok(MalVal::Str(key)) => key,
+                    Ok(v) => v.to_string(),
+                    Err(e) => return Err(e),
+                };
+                let v = match read_form(rdr) {
+                    Ok(value) => value,
+                    Err(e) => return Err(e),
+                };
+                hmap.borrow_mut().insert(k, v);
+            }
+            _ => {
+                seq.borrow_mut().push(read_form(rdr)?);
+            }
         }
     }
 
@@ -159,10 +186,7 @@ fn read_seq(rdr: &mut Reader, c: &str) -> Result<MalVal, MalError> {
         ")" => Ok(MalVal::List(seq)),
         "]" => Ok(MalVal::Vector(seq)),
         "}" => Ok(MalVal::Hashmap(hmap)),
-        _ => Err(MalError::Error(format!(
-            "unexpected end of input '{}'",
-            c
-        ))),
+        _ => Err(MalError::Error(format!("unexpected end of input '{}'", c))),
     }
 }
 
@@ -203,5 +227,49 @@ fn read_atom(rdr: &mut Reader) -> Result<MalVal, MalError> {
                 Ok(MalVal::Symbol(token.to_string()))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_reader_peek() {
+        let reader = Reader {
+            tokens: vec!["token1".to_string(), "token2".to_string()],
+            pos: 0,
+        };
+        assert_eq!(reader.peek().unwrap(), "token1");
+    }
+
+    #[test]
+    fn test_reader_next() {
+        let mut reader = Reader {
+            tokens: vec!["token1".to_string(), "token2".to_string()],
+            pos: 0,
+        };
+        assert_eq!(reader.next().unwrap(), "token1");
+        assert_eq!(reader.next().unwrap(), "token2");
+    }
+
+    #[test]
+    fn test_reader_skip() {
+        let mut reader = Reader {
+            tokens: vec!["token1".to_string(), "token2".to_string()],
+            pos: 0,
+        };
+        reader.skip();
+        assert_eq!(reader.peek().unwrap(), "token2");
+    }
+
+    #[test]
+    fn test_reader_underflow() {
+        let mut reader = Reader {
+            tokens: vec!["token1".to_string()],
+            pos: 1,
+        };
+        assert!(reader.peek().is_err());
+        assert!(reader.next().is_err());
     }
 }
