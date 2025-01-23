@@ -20,6 +20,7 @@ WORKDIR /mal
 ##########################################################
 
 RUN apt-get -y install cargo \
+  librust-regex-dev \
   librust-rustyline-dev \
   rust-clippy rustfmt
 
