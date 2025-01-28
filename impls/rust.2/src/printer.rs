@@ -15,7 +15,7 @@ pub fn print(output: Result<MalVal, MalError>) -> bool {
     true
 }
 
-fn pr_str(ast: &MalVal) -> String {
+pub fn pr_str(ast: &MalVal) -> String {
     format!("{}", ast)
 }
 

@@ -1,6 +1,4 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::vec::Vec;
 
 use regex::Regex;
@@ -92,47 +90,47 @@ fn read_form(rdr: &mut Reader) -> Result<MalVal, MalError> {
     match token {
         "'" => {
             rdr.skip();
-            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+            Ok(MalVal::List(vec![
                 MalVal::Symbol("quote".to_string()),
                 read_form(rdr)?,
-            ]))))
+            ]))
         }
         "`" => {
             rdr.skip();
-            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+            Ok(MalVal::List(vec![
                 MalVal::Symbol("quasiquote".to_string()),
                 read_form(rdr)?,
-            ]))))
+            ]))
         }
         "~" => {
             rdr.skip();
-            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+            Ok(MalVal::List(vec![
                 MalVal::Symbol("unquote".to_string()),
                 read_form(rdr)?,
-            ]))))
+            ]))
         }
         "~@" => {
             rdr.skip();
-            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+            Ok(MalVal::List(vec![
                 MalVal::Symbol("splice-unquote".to_string()),
                 read_form(rdr)?,
-            ]))))
+            ]))
         }
         "^" => {
             rdr.skip();
             let meta = read_form(rdr)?;
-            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+            Ok(MalVal::List(vec![
                 MalVal::Symbol("with-meta".to_string()),
                 read_form(rdr)?,
                 meta,
-            ]))))
+            ]))
         }
         "@" => {
             rdr.skip();
-            Ok(MalVal::List(Rc::new(RefCell::new(vec![
+            Ok(MalVal::List(vec![
                 MalVal::Symbol("deref".to_string()),
                 read_form(rdr)?,
-            ]))))
+            ]))
         }
         "(" => read_list(rdr),
         "[" => read_vector(rdr),
@@ -145,8 +143,8 @@ fn read_form(rdr: &mut Reader) -> Result<MalVal, MalError> {
 }
 
 fn read_seq(rdr: &mut Reader, c: &str) -> Result<MalVal, MalError> {
-    let seq: Rc<RefCell<Vec<MalVal>>> = Rc::new(RefCell::new(vec![]));
-    let hmap: Rc<RefCell<HashMap<String, MalVal>>> = Rc::new(RefCell::new(HashMap::new()));
+    let mut seq = vec![];
+    let mut hmap = HashMap::new();
 
     // Skip opening symbol: {/[/(
     rdr.skip();
@@ -170,14 +168,12 @@ fn read_seq(rdr: &mut Reader, c: &str) -> Result<MalVal, MalError> {
                     Ok(v) => v.to_string(),
                     Err(e) => return Err(e),
                 };
-                let v = match read_form(rdr) {
-                    Ok(value) => value,
-                    Err(e) => return Err(e),
-                };
-                hmap.borrow_mut().insert(k, v);
+                let v = read_form(rdr)?;
+
+                hmap.insert(k, v);
             }
             _ => {
-                seq.borrow_mut().push(read_form(rdr)?);
+                seq.push(read_form(rdr)?);
             }
         }
     }
