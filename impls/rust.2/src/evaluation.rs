@@ -1,11 +1,12 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::environment::MalEnv;
-use crate::error::MalError;
-use crate::types::MalVal;
+use crate::types::environment::MalEnv;
+use crate::types::error::MalError;
+use crate::types::lambda::Lambda;
+use crate::types::{MalReturn, MalVal};
 
-pub fn eval(input: Result<MalVal, MalError>, env: Rc<RefCell<MalEnv>>) -> Result<MalVal, MalError> {
+pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
     let ast = input?;
     let mut debug_eval = false;
 
@@ -18,7 +19,7 @@ pub fn eval(input: Result<MalVal, MalError>, env: Rc<RefCell<MalEnv>>) -> Result
         Err(_) => (),
     }
     if debug_eval {
-        println!("EVAL: {}", &ast);
+        println!("EVAL: {}", &ast.pr_str(true));
     }
 
     match ast.clone() {
@@ -30,7 +31,7 @@ pub fn eval(input: Result<MalVal, MalError>, env: Rc<RefCell<MalEnv>>) -> Result
 
             Ok(MalVal::Vector(v))
         }
-        MalVal::List(mut l) => {
+        MalVal::List(l) => {
             if l.is_empty() {
                 return Ok(ast);
             }
@@ -40,7 +41,7 @@ pub fn eval(input: Result<MalVal, MalError>, env: Rc<RefCell<MalEnv>>) -> Result
                     "def!" => {
                         let key = l[1].clone();
                         let val = eval(Ok(l[2].clone()), env.clone())?;
-                        env.borrow_mut().set(&key.to_string(), val.clone());
+                        env.borrow_mut().set(&key.pr_str(true), val.clone());
                         return Ok(val);
                     }
                     "let*" => {
@@ -51,39 +52,69 @@ pub fn eval(input: Result<MalVal, MalError>, env: Rc<RefCell<MalEnv>>) -> Result
                         let body = l[2].clone();
 
                         match bindings {
-                            MalVal::List(bindings) | MalVal::Vector(bindings) => {
+                            MalVal::List(bindings)
+                            | MalVal::Vector(bindings) => {
                                 for i in (0..bindings.len()).step_by(2) {
                                     let key = bindings[i].clone();
                                     let val = eval(Ok(bindings[i + 1].clone()), new_env.clone())?;
-                                    new_env.borrow_mut().set(&key.to_string(), val);
+                                    new_env.borrow_mut().set(&key.pr_str(true), val);
                                 }
                             }
                             _ => {
                                 return Err(MalError::Error(
                                     "let* bindings must be a list or vector".to_string(),
-                                ))
+                                ));
                             }
                         }
 
                         return eval(Ok(body), new_env);
                     }
+                    "do" => {
+                        let mut result = MalVal::Nil;
+                        for e in l.iter().skip(1) {
+                            result = eval(Ok(e.clone()), env.clone())?;
+                        }
+                        return Ok(result);
+                    }
+                    "if" => {
+                        let mut result = MalVal::Nil;
+                        match eval(Ok(l[1].clone()), env.clone())? {
+                            MalVal::Bool(false)
+                            | MalVal::Nil => {
+                                if l.len() == 4 {
+                                    result = eval(Ok(l[3].clone()), env.clone())?;
+                                }
+                            }
+                            _ => {
+                                result = eval(Ok(l[2].clone()), env.clone())?;
+                            }
+                        }
+                        return Ok(result);
+                    }
+                    "fn*" | "lambda" => {
+                        return Ok(MalVal::Lambda(Rc::new(RefCell::new(Lambda::new(
+                            eval,
+                            l[2].clone(),
+                            l[1].clone(),
+                            env.clone(),
+                        )))));
+                    }
                     _ => (),
                 }
             }
 
-            for e in l.iter_mut() {
-                match eval(Ok(e.clone()), env.clone()) {
-                    Ok(v) => *e = v,
-                    Err(e) => return Err(e),
-                }
-            }
+            let argv: Vec<MalVal> = l.iter().map(|x| eval(Ok(x.clone()), Rc::clone(&env)).unwrap()).collect();
+            let func = &argv[0];
 
-            let func = l.remove(0);
-            match func.apply(l) {
-                Ok(v) => Ok(v),
-                Err(e) => Err(MalError::Error(e)),
+            if let MalVal::Function(_) = func {
+                return func.apply(argv[1..].to_vec());
             }
+            if let MalVal::Lambda(_) = func {
+                return func.apply(argv[1..].to_vec());
+            }
+            Ok(MalVal::List(argv))
         }
+
         MalVal::Hashmap(mut h) => {
             let entries: Vec<_> = h.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
             for (k, v) in entries {

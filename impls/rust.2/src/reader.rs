@@ -48,7 +48,7 @@ pub fn read(rl: &mut DefaultEditor, prompt: &str) -> Result<MalVal, MalError> {
     }
 }
 
-fn read_str(line: &str) -> Result<MalVal, MalError> {
+pub fn read_str(line: &str) -> Result<MalVal, MalError> {
     let tokens = tokenise(line)?;
 
     if tokens.is_empty() {
@@ -165,7 +165,7 @@ fn read_seq(rdr: &mut Reader, c: &str) -> Result<MalVal, MalError> {
             "}" => {
                 let k = match read_form(rdr) {
                     Ok(MalVal::Str(key)) => key,
-                    Ok(v) => v.to_string(),
+                    Ok(v) => v.pr_str(true),
                     Err(e) => return Err(e),
                 };
                 let v = read_form(rdr)?;

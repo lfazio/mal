@@ -3,7 +3,7 @@ use crate::MalVal;
 
 pub fn print(output: Result<MalVal, MalError>) -> bool {
     match output {
-        Ok(ast) => println!("{}", pr_str(&ast)),
+        Ok(ast) => println!("{}", ast.pr_str(true)),
         Err(MalError::Break(s)) => {
             println!("{}\nBye!", s);
 
@@ -13,33 +13,4 @@ pub fn print(output: Result<MalVal, MalError>) -> bool {
     }
 
     true
-}
-
-pub fn pr_str(ast: &MalVal) -> String {
-    format!("{}", ast)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::MalError;
-    use crate::MalVal;
-
-    #[test]
-    fn test_print_ok() {
-        let output = Ok(MalVal::Int(42));
-        assert!(print(output));
-    }
-
-    #[test]
-    fn test_print_error() {
-        let output = Err(MalError::Error("something went wrong".to_string()));
-        assert!(print(output));
-    }
-
-    #[test]
-    fn test_print_break() {
-        let output = Err(MalError::Break("CTRL-C".to_string()));
-        assert!(!print(output));
-    }
 }

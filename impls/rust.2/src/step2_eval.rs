@@ -3,16 +3,13 @@ use std::{cell::RefCell, rc::Rc};
 // Import (via `use`) the `fmt` module to make it available.
 use rustyline::DefaultEditor;
 
-mod environment;
 mod evaluation;
 mod printer;
 mod reader;
-use environment::MalEnv;
-
-mod error;
-use error::MalError;
+use types::environment::MalEnv;
 
 mod types;
+use types::error::MalError;
 use types::MalVal;
 
 mod builtins;

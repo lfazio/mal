@@ -4,10 +4,8 @@ use rustyline::DefaultEditor;
 mod printer;
 mod reader;
 
-mod error;
-use error::MalError;
-
 mod types;
+use types::error::MalError;
 use types::MalVal;
 
 #[allow(non_snake_case)]

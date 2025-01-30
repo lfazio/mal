@@ -1,67 +1,13 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{environment::MalEnv, types::MalVal};
+use crate::types::environment::MalEnv;
 
-fn fn_op(func: &str, args: &[i64]) -> i64 {
-    match func {
-        "+" => args.iter().sum(),
-        "-" => args[1..].iter().fold(args[0], |acc, x| acc - x),
-        "*" => args.iter().product(),
-        "/" => args[1..].iter().fold(args[0], |acc, x| acc / x),
-        _ => panic!("Unknown operator: {}", func),
-    }
-}
+mod core;
+mod math;
+mod string;
 
 pub fn register(env: Rc<RefCell<MalEnv>>) {
-    env.borrow_mut().set(
-        "+",
-        MalVal::Function(|args| {
-            Ok(MalVal::Int(fn_op(
-                "+",
-                &args
-                    .iter()
-                    .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
-                    .collect::<Vec<_>>(),
-            )))
-        }),
-    );
-
-    env.borrow_mut().set(
-        "-",
-        MalVal::Function(|args| {
-            Ok(MalVal::Int(fn_op(
-                "-",
-                &args
-                    .iter()
-                    .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
-                    .collect::<Vec<_>>(),
-            )))
-        }),
-    );
-
-    env.borrow_mut().set(
-        "*",
-        MalVal::Function(|args| {
-            Ok(MalVal::Int(fn_op(
-                "*",
-                &args
-                    .iter()
-                    .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
-                    .collect::<Vec<_>>(),
-            )))
-        }),
-    );
-
-    env.borrow_mut().set(
-        "/",
-        MalVal::Function(|args| {
-            Ok(MalVal::Int(fn_op(
-                "/",
-                &args
-                    .iter()
-                    .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
-                    .collect::<Vec<_>>(),
-            )))
-        }),
-    );
+    core::register(env.clone());
+    string::register(env.clone());
+    math::register(env.clone());
 }

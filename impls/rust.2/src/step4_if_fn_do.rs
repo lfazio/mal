@@ -6,11 +6,11 @@ use rustyline::DefaultEditor;
 mod evaluation;
 mod printer;
 mod reader;
-
 mod types;
-use types::environment::MalEnv;
-use types::error::MalError;
-use types::MalVal;
+
+use crate::types::environment::MalEnv;
+use crate::types::error::MalError;
+use crate::types::MalVal;
 
 mod builtins;
 
@@ -23,11 +23,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let env = Rc::new(RefCell::new(MalEnv::new(None)));
     builtins::register(env.clone());
+    let _ = evaluation::eval(reader::read_str("(def! not (fn* (a) (if a false true)))"), Rc::clone(&env));
 
     // REPL
     while printer::print(evaluation::eval(
         reader::read(&mut rl, "user> "),
-        env.clone(),
+        Rc::clone(&env),
     )) {
         continue;
     }
