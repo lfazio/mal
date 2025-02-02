@@ -23,7 +23,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let env = Rc::new(RefCell::new(MalEnv::new(None)));
     builtins::register(env.clone());
-    let _ = evaluation::eval(reader::read_str("(def! not (fn* (a) (if a false true)))"), Rc::clone(&env));
 
     // REPL
     while printer::print(evaluation::eval(
