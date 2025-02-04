@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::types::error::MalError;
-use crate::types::{MalVal, MalReturn};
+use crate::types::{MalReturn, MalVal};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MalEnv {

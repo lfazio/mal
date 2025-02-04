@@ -1,0 +1,38 @@
+use std::{cell::RefCell, rc::Rc};
+
+// Import (via `use`) the `fmt` module to make it available.
+use rustyline::DefaultEditor;
+
+mod evaluation;
+mod printer;
+mod reader;
+mod types;
+
+use crate::types::environment::MalEnv;
+use crate::types::error::MalError;
+use crate::types::MalVal;
+
+mod builtins;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // `()` can be used when no completer is required
+    let mut rl = DefaultEditor::new()?;
+    if rl.load_history(".mal_history.txt").is_err() {
+        println!("No previous history.");
+    }
+
+    let env = Rc::new(RefCell::new(MalEnv::new(None)));
+    builtins::register(env.clone());
+
+    // REPL
+    while printer::print(evaluation::eval(
+        reader::read(&mut rl, "user> "),
+        Rc::clone(&env),
+    )) {
+        continue;
+    }
+
+    let _ = rl.save_history(".mal_history.txt");
+
+    Ok(())
+}

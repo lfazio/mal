@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::types::MalVal;
 use crate::types::environment::MalEnv;
+use crate::types::MalVal;
 
 pub fn register(env: Rc<RefCell<MalEnv>>) {
     env.borrow_mut().set(
@@ -28,8 +28,7 @@ pub fn register(env: Rc<RefCell<MalEnv>>) {
     env.borrow_mut().set(
         "empty?",
         MalVal::Function(|args| match args.first() {
-            Some(MalVal::List(l)) 
-            | Some(MalVal::Vector(l)) => Ok(MalVal::Bool(l.is_empty())),
+            Some(MalVal::List(l)) | Some(MalVal::Vector(l)) => Ok(MalVal::Bool(l.is_empty())),
             _ => Ok(MalVal::Bool(false)),
         }),
     );

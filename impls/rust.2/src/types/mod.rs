@@ -48,7 +48,7 @@ impl MalVal {
         match &self {
             MalVal::Function(f) => f(args),
             MalVal::Lambda(l) => l.borrow().apply(args),
-            _ => Ok(self.clone()),
+            _ => Err(MalError::Error("not a function".to_string())),
         }
     }
 
