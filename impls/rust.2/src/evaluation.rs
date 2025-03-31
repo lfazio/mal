@@ -99,12 +99,12 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                     MalVal::Symbol(s) if s == "fn*" => {
                         let args = l[1].clone();
 
-                        return Ok(MalVal::Lambda(Rc::new(RefCell::new(Lambda::new(
+                        return Ok(MalVal::Lambda(Rc::new(Lambda::new(
                             eval,
                             l[2].clone(),
                             args,
                             env.clone(),
-                        )))));
+                        ))));
                     }
                     _ => match eval(Ok(l[0].clone()), env.clone()) {
                         Ok(func @ MalVal::Function(_)) => {
@@ -123,8 +123,8 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                                 .map(|x| eval(Ok(x.clone()), env.clone()))
                                 .collect::<Result<Vec<_>, _>>()?;
 
-                            env = Rc::new(RefCell::new(f.borrow_mut().bind(argv)));
-                            ast = f.borrow_mut().ast.clone();
+                            env = Rc::new(RefCell::new(f.bind(argv)));
+                            ast = f.ast.clone();
                             continue;
                         }
                         Ok(_) => {
@@ -138,7 +138,8 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                 let mut new_hm: HashMap<String, MalVal> = HashMap::new();
                 let entries: Vec<_> = h.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
                 for (k, v) in entries {
-                    new_hm.entry(k)
+                    new_hm
+                        .entry(k)
                         .insert_entry(eval(Ok(v), env.clone()).unwrap());
                 }
 

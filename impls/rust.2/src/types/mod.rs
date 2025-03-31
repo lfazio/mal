@@ -1,7 +1,7 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
+use std::cell::RefCell;
 use std::vec::Vec;
 
 pub mod environment;
@@ -28,7 +28,7 @@ pub enum MalVal {
     Vector(Rc<Vec<MalVal>>),
     Hashmap(Rc<HashMap<String, MalVal>>),
     Function(fn(MalFunctionArgs) -> MalReturn),
-    Lambda(Rc<RefCell<Lambda>>),
+    Lambda(Rc<Lambda>),
 }
 
 fn escape_str(s: &str) -> String {
@@ -47,7 +47,7 @@ impl MalVal {
     pub fn apply(&self, args: Vec<MalVal>) -> MalReturn {
         match &self {
             MalVal::Function(f) => f(args),
-            MalVal::Lambda(l) => l.borrow().apply(args),
+            MalVal::Lambda(l) => l.apply(args),
             _ => Err(MalError::Error("not a function".to_string())),
         }
     }
