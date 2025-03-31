@@ -11,7 +11,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
     let mut ast = input?;
     let mut env = env;
     let mut new_env: Rc<RefCell<MalEnv>>;
-    let repl_env;
+    let mut repl_env;
 
     loop {
         // TCO loop
@@ -103,6 +103,14 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                             Rc::clone(env),
                         ))));
                     }
+                    MalVal::Symbol(s) if s == "eval" => {
+                        let args = l[1].clone();
+                        ast = eval(Ok(args), env)?;
+                        repl_env = get_env_repl(env);
+                        env = &repl_env;
+                        continue;
+                    }
+
                     _ => match eval(Ok(l[0].clone()), env) {
                         Ok(func @ MalVal::Function(_)) => {
                             let argv: Vec<MalVal> = l

@@ -30,6 +30,7 @@ pub enum MalVal {
     Hashmap(Rc<HashMap<String, MalVal>>),
     Function(fn(&MalFunctionArgs) -> MalReturn),
     Lambda(Rc<Lambda>),
+    Atom(Rc<RefCell<MalVal>>),
 }
 
 fn escape_str(s: &str) -> String {
@@ -124,6 +125,9 @@ impl MalVal {
             }
             MalVal::Function(_) => result.push_str("#<builtin>"),
             MalVal::Lambda(_) => result.push_str("#<function>"),
+            MalVal::Atom(mv) => {
+                result.push_str(&format!("(atom {})", &mv.borrow().pr_str(print_readably)))
+            }
         }
 
         result
@@ -153,6 +157,7 @@ impl PartialEq for MalVal {
             (MalVal::Vector(a), MalVal::List(b)) => a == b,
             (MalVal::List(a), MalVal::Vector(b)) => a == b,
             (MalVal::Hashmap(a), MalVal::Hashmap(b)) => a == b,
+            (MalVal::Atom(a), MalVal::Atom(b)) => *a.borrow() == *b.borrow(),
             _ => false,
         }
     }
@@ -163,7 +168,7 @@ impl Hash for MalVal {
         match self {
             MalVal::Str(s) => s.hash(state),
             MalVal::Symbol(s) => s.hash(state),
-            _ => self.clone().pr_str(true).hash(state),
+            _ => self.clone().pr_str(false).hash(state),
         }
     }
 }
