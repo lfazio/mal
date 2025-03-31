@@ -24,14 +24,15 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
 
         match ast.clone() {
             MalVal::Symbol(k) => return env.borrow().get(&k),
-            MalVal::Vector(mut v) => {
-                for v in v.iter_mut() {
-                    *v = eval(Ok(v.clone()), env.clone())?;
+            MalVal::Vector(v) => {
+                let mut s: Vec<MalVal> = vec![];
+                for v in v.iter() {
+                    s.push(eval(Ok(v.clone()), env.clone())?);
                 }
 
-                return Ok(MalVal::Vector(v));
+                return Ok(MalVal::Vector(Rc::new(s)));
             }
-            MalVal::List(mut l) => {
+            MalVal::List(l) => {
                 if l.is_empty() {
                     return Ok(ast);
                 }
@@ -70,12 +71,13 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                         continue;
                     }
                     MalVal::Symbol(s) if s == "do" => {
+                        let mut s = vec![];
                         let len = if l.len() >= 2 { l.len() } else { 0 };
-                        for e in l.iter_mut().skip(1).take(len) {
-                            *e = eval(Ok(e.clone()), env.clone())?;
+                        for e in l.iter().skip(1).take(len) {
+                            s.push(eval(Ok(e.clone()), env.clone())?);
                         }
                         if len >= 2 {
-                            ast = l.last_mut().unwrap().clone();
+                            ast = l.last().unwrap().clone();
                             continue;
                         }
                     }

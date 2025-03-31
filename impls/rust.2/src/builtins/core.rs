@@ -6,7 +6,7 @@ use crate::types::MalVal;
 pub fn register(env: Rc<RefCell<MalEnv>>) {
     env.borrow_mut().set(
         "list",
-        MalVal::Function(|args| Ok(MalVal::List(args.to_vec()))),
+        MalVal::Function(|args| Ok(MalVal::List(Rc::new(args.to_vec())))),
     );
 
     env.borrow_mut().set(
