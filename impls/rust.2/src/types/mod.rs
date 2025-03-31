@@ -26,7 +26,7 @@ pub enum MalVal {
     Symbol(String),
     List(Rc<Vec<MalVal>>),
     Vector(Rc<Vec<MalVal>>),
-    Hashmap(HashMap<String, MalVal>),
+    Hashmap(Rc<HashMap<String, MalVal>>),
     Function(fn(MalFunctionArgs) -> MalReturn),
     Lambda(Rc<RefCell<Lambda>>),
 }

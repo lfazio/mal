@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::types::environment::MalEnv;
@@ -133,14 +134,15 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                     },
                 }
             }
-            MalVal::Hashmap(mut h) => {
+            MalVal::Hashmap(h) => {
+                let mut new_hm: HashMap<String, MalVal> = HashMap::new();
                 let entries: Vec<_> = h.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
                 for (k, v) in entries {
-                    h.entry(k)
-                        .and_modify(|val| *val = eval(Ok(v), env.clone()).unwrap());
+                    new_hm.entry(k)
+                        .insert_entry(eval(Ok(v), env.clone()).unwrap());
                 }
 
-                return Ok(MalVal::Hashmap(h));
+                return Ok(MalVal::Hashmap(Rc::new(new_hm)));
             }
             _ => return Ok(ast),
         }

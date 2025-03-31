@@ -182,7 +182,7 @@ fn read_seq(rdr: &mut Reader, c: &str) -> Result<MalVal, MalError> {
     match c {
         ")" => Ok(MalVal::List(Rc::new(seq))),
         "]" => Ok(MalVal::Vector(Rc::new(seq))),
-        "}" => Ok(MalVal::Hashmap(hmap)),
+        "}" => Ok(MalVal::Hashmap(Rc::new(hmap))),
         _ => Err(MalError::Error(format!("unexpected end of input '{}'", c))),
     }
 }
