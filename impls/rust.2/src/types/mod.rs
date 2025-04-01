@@ -4,6 +4,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::vec::Vec;
 
+#[macro_use]
 pub mod environment;
 pub mod error;
 pub mod lambda;

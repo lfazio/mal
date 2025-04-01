@@ -43,3 +43,17 @@ pub fn get_env_repl(env: &Rc<RefCell<MalEnv>>) -> Rc<RefCell<MalEnv>> {
         None => Rc::clone(env),
     }
 }
+
+#[macro_export]
+macro_rules! set_env {
+    ($env:expr, $key:expr, $val:expr) => {
+        $env.set($key, $val)
+    };
+}
+
+#[macro_export]
+macro_rules! get_env {
+    ($env:expr, $key:expr) => {
+        $env.get($key)
+    };
+}
