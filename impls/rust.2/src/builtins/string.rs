@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use crate::types::environment::MalEnv;
 use crate::types::MalVal;
 
-pub fn register(env: Rc<RefCell<MalEnv>>) {
+pub fn register(env: &Rc<RefCell<MalEnv>>) {
     env.borrow_mut().set(
         "pr-str",
         &MalVal::Function(|args| {

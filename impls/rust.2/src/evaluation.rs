@@ -2,18 +2,19 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::types::environment::MalEnv;
+use crate::types::environment::{MalEnv, get_env_repl};
 use crate::types::error::MalError;
 use crate::types::lambda::Lambda;
 use crate::types::{MalReturn, MalVal};
 
-pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
+pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
     let mut ast = input?;
     let mut env = env;
+    let mut new_env: Rc<RefCell<MalEnv>>;
 
     loop {
         // TCO loop
-        let debug_eval = match env.clone().borrow().get("DEBUG-EVAL") {
+        let debug_eval = match env.borrow().get("DEBUG-EVAL") {
             Ok(MalVal::Bool(debug)) => debug,
             Ok(MalVal::Int(_)) | Ok(MalVal::Str(_)) | Ok(MalVal::List(_)) => true,
             _ => false,
@@ -28,7 +29,7 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
             MalVal::Vector(v) => {
                 let mut s: Vec<MalVal> = vec![];
                 for v in v.iter() {
-                    s.push(eval(Ok(v.clone()), env.clone())?);
+                    s.push(eval(Ok(v.clone()), env)?);
                 }
 
                 return Ok(MalVal::Vector(Rc::new(s)));
@@ -40,23 +41,22 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
 
                 match &l[0] {
                     MalVal::Symbol(s) if s == "def!" => {
+                        let repl_env = get_env_repl(env);
                         let key = l[1].clone();
-                        let val = eval(Ok(l[2].clone()), env.clone())?;
-                        env.borrow_mut().set(&key.pr_str(true), &val);
+                        let val = eval(Ok(l[2].clone()), &repl_env)?;
+                        repl_env.borrow_mut().set(&key.pr_str(true), &val);
                         return Ok(val);
                     }
                     MalVal::Symbol(s) if s == "let*" => {
-                        let outer = env.clone();
-                        let new_env = MalEnv::new(Some(outer));
-                        let new_env = Rc::new(RefCell::new(new_env));
                         let bindings = l[1].clone();
                         let body = l[2].clone();
 
                         match bindings {
                             MalVal::List(bindings) | MalVal::Vector(bindings) => {
+                                new_env = Rc::new(RefCell::new(MalEnv::new(Some(Rc::clone(env)))));
                                 for i in (0..bindings.len()).step_by(2) {
                                     let key = bindings[i].clone();
-                                    let val = eval(Ok(bindings[i + 1].clone()), new_env.clone())?;
+                                    let val = eval(Ok(bindings[i + 1].clone()), &new_env)?;
                                     new_env.borrow_mut().set(&key.pr_str(true), &val);
                                 }
                             }
@@ -68,21 +68,21 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                         }
 
                         ast = body;
-                        env = new_env;
+                        env = &new_env;
                         continue;
                     }
                     MalVal::Symbol(s) if s == "do" => {
                         let mut s = vec![];
                         let len = if l.len() >= 2 { l.len() } else { 0 };
                         for e in l.iter().skip(1).take(len) {
-                            s.push(eval(Ok(e.clone()), env.clone())?);
+                            s.push(eval(Ok(e.clone()), env)?);
                         }
                         if len >= 2 {
                             ast = l.last().unwrap().clone();
                             continue;
                         }
                     }
-                    MalVal::Symbol(s) if s == "if" => match eval(Ok(l[1].clone()), env.clone())? {
+                    MalVal::Symbol(s) if s == "if" => match eval(Ok(l[1].clone()), env)? {
                         MalVal::Bool(false) | MalVal::Nil => {
                             if l.len() == 4 {
                                 ast = l[3].clone();
@@ -106,12 +106,12 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                             env.clone(),
                         ))));
                     }
-                    _ => match eval(Ok(l[0].clone()), env.clone()) {
+                    _ => match eval(Ok(l[0].clone()), env) {
                         Ok(func @ MalVal::Function(_)) => {
                             let argv: Vec<MalVal> = l
                                 .iter()
                                 .skip(1)
-                                .map(|x| eval(Ok(x.clone()), env.clone()))
+                                .map(|x| eval(Ok(x.clone()), env))
                                 .collect::<Result<Vec<_>, _>>()?;
 
                             return func.apply(argv);
@@ -120,10 +120,11 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                             let argv: Vec<MalVal> = l
                                 .iter()
                                 .skip(1)
-                                .map(|x| eval(Ok(x.clone()), env.clone()))
+                                .map(|x| eval(Ok(x.clone()), env))
                                 .collect::<Result<Vec<_>, _>>()?;
 
-                            env = Rc::new(RefCell::new(f.bind(argv)));
+                            new_env = Rc::new(RefCell::new(f.bind(argv)));
+                            env = &new_env;
                             ast = f.ast.clone();
                             continue;
                         }
@@ -140,7 +141,7 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                 for (k, v) in entries {
                     new_hm
                         .entry(k)
-                        .insert_entry(eval(Ok(v), env.clone()).unwrap());
+                        .insert_entry(eval(Ok(v), env).unwrap());
                 }
 
                 return Ok(MalVal::Hashmap(Rc::new(new_hm)));

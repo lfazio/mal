@@ -51,7 +51,7 @@ impl Lambda {
 
     pub fn apply(&self, argv: Vec<MalVal>) -> MalReturn {
         let new_env = Rc::new(RefCell::new(self.bind(argv)));
-        (self.eval)(Ok(self.ast.clone()), new_env)
+        (self.eval)(Ok(self.ast.clone()), &new_env)
     }
 }
 

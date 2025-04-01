@@ -36,3 +36,10 @@ impl MalEnv {
         }
     }
 }
+
+pub fn get_env_repl(env: &Rc<RefCell<MalEnv>>) -> Rc<RefCell<MalEnv>> {
+    match env.borrow().outer {
+        Some(ref outer) => get_env_repl(outer),
+        None => Rc::clone(env),
+    }
+}

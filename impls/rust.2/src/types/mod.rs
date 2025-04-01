@@ -15,7 +15,7 @@ use crate::types::lambda::Lambda;
 
 pub type MalReturn = Result<MalVal, MalError>;
 pub type MalFunctionArgs = Vec<MalVal>;
-pub type MalFunction = fn(args: MalReturn, Rc<RefCell<MalEnv>>) -> MalReturn;
+pub type MalFunction = fn(args: MalReturn, &Rc<RefCell<MalEnv>>) -> MalReturn;
 
 #[derive(Debug, Eq, Clone)]
 pub enum MalVal {

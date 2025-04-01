@@ -22,12 +22,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let env = Rc::new(RefCell::new(MalEnv::new(None)));
-    builtins::register(env.clone());
+    builtins::register(&env);
 
     // REPL
     while printer::print(evaluation::eval(
         reader::read(&mut rl, "user> "),
-        Rc::clone(&env),
+        &env,
     )) {
         continue;
     }
