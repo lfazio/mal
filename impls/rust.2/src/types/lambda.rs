@@ -1,10 +1,10 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use super::environment::MalEnv;
 use super::MalFunction;
 use super::MalReturn;
 use super::MalVal;
+use super::environment::MalEnv;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Lambda {

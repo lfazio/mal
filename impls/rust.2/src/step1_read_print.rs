@@ -5,8 +5,8 @@ mod printer;
 mod reader;
 
 mod types;
-use types::error::MalError;
 use types::MalVal;
+use types::error::MalError;
 
 #[allow(non_snake_case)]
 fn EVAL(input: Result<MalVal, MalError>) -> Result<MalVal, MalError> {

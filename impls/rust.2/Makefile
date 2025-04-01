@@ -26,8 +26,10 @@ $(STEP1) $(STEP2) $(STEP3) $(STEP4) $(STEP5): \
 	src/printer.rs \
 	src/reader.rs
 
-lint:
-	rustfmt src/*.rs src/types/*.rs src/builtins/*.rs
+fmt:
+	cargo fmt --all
+
+lint: fmt
 	cargo clippy
 
 .PHONY: clean

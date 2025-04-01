@@ -129,7 +129,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                             continue;
                         }
                         Ok(_) => {
-                            return Err(MalError::Error("try to call a non-function".to_string()))
+                            return Err(MalError::Error("try to call a non-function".to_string()));
                         }
                         Err(e) => return Err(e),
                     },
@@ -139,9 +139,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                 let mut new_hm: HashMap<String, MalVal> = HashMap::new();
                 let entries: Vec<_> = h.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
                 for (k, v) in entries {
-                    new_hm
-                        .entry(k)
-                        .insert_entry(eval(Ok(v), env).unwrap());
+                    new_hm.entry(k).insert_entry(eval(Ok(v), env).unwrap());
                 }
 
                 return Ok(MalVal::Hashmap(Rc::new(new_hm)));

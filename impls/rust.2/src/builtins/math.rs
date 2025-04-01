@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::types::environment::MalEnv;
 use crate::types::MalVal;
+use crate::types::environment::MalEnv;
 
 fn fn_op(func: &str, args: &[i64]) -> i64 {
     match func {

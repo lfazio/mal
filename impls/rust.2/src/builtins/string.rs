@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::types::environment::MalEnv;
 use crate::types::MalVal;
+use crate::types::environment::MalEnv;
 
 pub fn register(env: &Rc<RefCell<MalEnv>>) {
     env.borrow_mut().set(

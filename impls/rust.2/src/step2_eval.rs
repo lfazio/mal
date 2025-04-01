@@ -9,8 +9,8 @@ mod reader;
 use types::environment::MalEnv;
 
 mod types;
-use types::error::MalError;
 use types::MalVal;
+use types::error::MalError;
 
 mod builtins;
 
@@ -25,10 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     builtins::register(&env);
 
     // REPL
-    while printer::print(evaluation::eval(
-        reader::read(&mut rl, "user> "),
-        &env,
-    )) {
+    while printer::print(evaluation::eval(reader::read(&mut rl, "user> "), &env)) {
         continue;
     }
 
