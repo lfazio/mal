@@ -19,11 +19,11 @@ impl MalEnv {
         }
     }
 
-    pub fn set(&mut self, symbol: &str, o: MalVal) {
+    pub fn set(&mut self, symbol: &str, o: &MalVal) {
         self.symbols
             .entry(symbol.to_string())
             .and_modify(|val| *val = o.clone())
-            .or_insert(o);
+            .or_insert(o.clone());
     }
 
     pub fn get(&self, symbol: &str) -> MalReturn {

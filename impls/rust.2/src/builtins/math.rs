@@ -28,7 +28,7 @@ fn fn_cmp(op: &str, args: &[MalVal]) -> bool {
 pub fn register(env: Rc<RefCell<MalEnv>>) {
     env.borrow_mut().set(
         "+",
-        MalVal::Function(|args| {
+        &MalVal::Function(|args| {
             Ok(MalVal::Int(fn_op(
                 "+",
                 &args
@@ -41,7 +41,7 @@ pub fn register(env: Rc<RefCell<MalEnv>>) {
 
     env.borrow_mut().set(
         "-",
-        MalVal::Function(|args| {
+        &MalVal::Function(|args| {
             Ok(MalVal::Int(fn_op(
                 "-",
                 &args
@@ -54,7 +54,7 @@ pub fn register(env: Rc<RefCell<MalEnv>>) {
 
     env.borrow_mut().set(
         "*",
-        MalVal::Function(|args| {
+        &MalVal::Function(|args| {
             Ok(MalVal::Int(fn_op(
                 "*",
                 &args
@@ -67,7 +67,7 @@ pub fn register(env: Rc<RefCell<MalEnv>>) {
 
     env.borrow_mut().set(
         "/",
-        MalVal::Function(|args| {
+        &MalVal::Function(|args| {
             Ok(MalVal::Int(fn_op(
                 "/",
                 &args
@@ -80,26 +80,26 @@ pub fn register(env: Rc<RefCell<MalEnv>>) {
 
     env.borrow_mut().set(
         "=",
-        MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("=", &args.to_vec())))),
+        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("=", &args.to_vec())))),
     );
 
     env.borrow_mut().set(
         "<",
-        MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("<", &args.to_vec())))),
+        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("<", &args.to_vec())))),
     );
 
     env.borrow_mut().set(
         "<=",
-        MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("<=", &args.to_vec())))),
+        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("<=", &args.to_vec())))),
     );
 
     env.borrow_mut().set(
         ">",
-        MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp(">", &args.to_vec())))),
+        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp(">", &args.to_vec())))),
     );
 
     env.borrow_mut().set(
         ">=",
-        MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp(">=", &args.to_vec())))),
+        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp(">=", &args.to_vec())))),
     );
 }

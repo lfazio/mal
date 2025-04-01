@@ -37,9 +37,9 @@ impl Lambda {
                 }
                 MalVal::Symbol(s) => {
                     if remaining {
-                        new_env.set(s, MalVal::List(Rc::new(argv[i - 1..].to_vec())));
+                        new_env.set(s, &MalVal::List(Rc::new(argv[i - 1..].to_vec())));
                     } else {
-                        new_env.set(s, argv[i].clone())
+                        new_env.set(s, &argv[i])
                     }
                 }
                 _ => (),

@@ -6,7 +6,7 @@ use crate::types::MalVal;
 pub fn register(env: Rc<RefCell<MalEnv>>) {
     env.borrow_mut().set(
         "pr-str",
-        MalVal::Function(|args| {
+        &MalVal::Function(|args| {
             Ok(MalVal::Str(
                 args.iter()
                     .map(|x| x.pr_str(true))
@@ -18,7 +18,7 @@ pub fn register(env: Rc<RefCell<MalEnv>>) {
 
     env.borrow_mut().set(
         "str",
-        MalVal::Function(|args| {
+        &MalVal::Function(|args| {
             Ok(MalVal::Str(
                 args.iter()
                     .map(|x| x.pr_str(false))
@@ -30,7 +30,7 @@ pub fn register(env: Rc<RefCell<MalEnv>>) {
 
     env.borrow_mut().set(
         "prn",
-        MalVal::Function(|args| {
+        &MalVal::Function(|args| {
             let txt = args
                 .iter()
                 .map(|x| x.pr_str(true))
@@ -43,7 +43,7 @@ pub fn register(env: Rc<RefCell<MalEnv>>) {
 
     env.borrow_mut().set(
         "println",
-        MalVal::Function(|args| {
+        &MalVal::Function(|args| {
             let txt = args
                 .iter()
                 .map(|x| x.pr_str(false))

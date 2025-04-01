@@ -42,7 +42,7 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                     MalVal::Symbol(s) if s == "def!" => {
                         let key = l[1].clone();
                         let val = eval(Ok(l[2].clone()), env.clone())?;
-                        env.borrow_mut().set(&key.pr_str(true), val.clone());
+                        env.borrow_mut().set(&key.pr_str(true), &val);
                         return Ok(val);
                     }
                     MalVal::Symbol(s) if s == "let*" => {
@@ -57,7 +57,7 @@ pub fn eval(input: MalReturn, env: Rc<RefCell<MalEnv>>) -> MalReturn {
                                 for i in (0..bindings.len()).step_by(2) {
                                     let key = bindings[i].clone();
                                     let val = eval(Ok(bindings[i + 1].clone()), new_env.clone())?;
-                                    new_env.borrow_mut().set(&key.pr_str(true), val);
+                                    new_env.borrow_mut().set(&key.pr_str(true), &val);
                                 }
                             }
                             _ => {
