@@ -9,8 +9,8 @@ use super::environment::MalEnv;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Lambda {
     eval: MalFunction,
-    pub ast: MalVal,
-    args: Vec<MalVal>,
+    pub ast: Rc<MalVal>,
+    args: Rc<Vec<MalVal>>,
     pub env: Rc<RefCell<MalEnv>>,
 }
 
@@ -18,16 +18,16 @@ impl Lambda {
     pub fn new(eval: MalFunction, ast: MalVal, args: MalVal, env: Rc<RefCell<MalEnv>>) -> Lambda {
         Lambda {
             eval,
-            ast,
-            env,
-            args: match args {
+            ast: Rc::new(ast),
+            args: Rc::new(match args {
                 MalVal::List(a) | MalVal::Vector(a) => a.to_vec(),
                 _ => vec![],
-            },
+            }),
+            env,
         }
     }
 
-    pub fn bind(&self, argv: Vec<MalVal>) -> MalEnv {
+    pub fn bind(&self, argv: &[MalVal]) -> MalEnv {
         let mut new_env = MalEnv::new(Some(self.env.clone()));
         let mut remaining = false;
         for (i, arg) in self.args.iter().enumerate() {
@@ -49,9 +49,9 @@ impl Lambda {
         new_env
     }
 
-    pub fn apply(&self, argv: Vec<MalVal>) -> MalReturn {
+    pub fn apply(&self, argv: &[MalVal]) -> MalReturn {
         let new_env = Rc::new(RefCell::new(self.bind(argv)));
-        (self.eval)(Ok(self.ast.clone()), &new_env)
+        (self.eval)(Ok((*self.ast).clone()), &new_env)
     }
 }
 

@@ -114,7 +114,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                                 .map(|x| eval(Ok(x.clone()), env))
                                 .collect::<Result<Vec<_>, _>>()?;
 
-                            return func.apply(argv);
+                            return func.apply(&argv);
                         }
                         Ok(MalVal::Lambda(f)) => {
                             let argv: Vec<MalVal> = l
@@ -123,9 +123,9 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                                 .map(|x| eval(Ok(x.clone()), env))
                                 .collect::<Result<Vec<_>, _>>()?;
 
-                            new_env = Rc::new(RefCell::new(f.bind(argv)));
+                            new_env = Rc::new(RefCell::new(f.bind(&argv)));
                             env = &new_env;
-                            ast = f.ast.clone();
+                            ast = (*f.ast).clone();
                             continue;
                         }
                         Ok(_) => {

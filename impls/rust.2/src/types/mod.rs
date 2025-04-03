@@ -45,9 +45,9 @@ fn escape_str(s: &str) -> String {
 }
 
 impl MalVal {
-    pub fn apply(&self, args: Vec<MalVal>) -> MalReturn {
+    pub fn apply(&self, args: &[MalVal]) -> MalReturn {
         match &self {
-            MalVal::Function(f) => f(args),
+            MalVal::Function(f) => f(args.to_vec()),
             MalVal::Lambda(l) => l.apply(args),
             _ => Err(MalError::Error("not a function".to_string())),
         }
