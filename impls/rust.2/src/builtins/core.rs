@@ -114,4 +114,70 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
             }
         }),
     );
+
+    env.borrow_mut().set(
+        "cons",
+        &MalVal::Function(|args| {
+            if let MalVal::List(seq) = &args[1] {
+                Ok(MalVal::List(Rc::new(
+                    vec![args[0].clone()]
+                        .into_iter()
+                        .chain(seq.iter().cloned())
+                        .collect(),
+                )))
+            } else if let MalVal::Vector(seq) = &args[1] {
+                Ok(MalVal::List(Rc::new(
+                    vec![args[0].clone()]
+                        .into_iter()
+                        .chain(seq.iter().cloned())
+                        .collect(),
+                )))
+            } else {
+                Err(MalError::Error(
+                    "cons expects a list or a vector as second argument".to_string(),
+                ))
+            }
+        }),
+    );
+
+    env.borrow_mut().set(
+        "concat",
+        &MalVal::Function(|args| {
+            let mut concatenated = vec![];
+
+            for arg in args.iter() {
+                if let MalVal::List(seq) = arg {
+                    concatenated.extend(seq.iter().cloned());
+                } else if let MalVal::Vector(seq) = arg {
+                    concatenated.extend(seq.iter().cloned());
+                } else {
+                    return Err(MalError::Error(
+                        "concat expects lists as arguments".to_string(),
+                    ));
+                }
+            }
+
+            Ok(MalVal::List(Rc::new(concatenated)))
+        }),
+    );
+
+    env.borrow_mut().set(
+        "vec",
+        &MalVal::Function(|args| {
+            if args.len() != 1 {
+                return Err(MalError::Error("vec expects one argument".to_string()));
+            }
+            if let MalVal::List(l) = &args[0] {
+                let vec: Vec<MalVal> = l.iter().cloned().collect();
+
+                Ok(MalVal::Vector(Rc::new(vec)))
+            } else if let MalVal::Vector(_) = &args[0] {
+                Ok(args[0].clone())
+            } else {
+                Err(MalError::Error(
+                    "vec expects a list or a vector".to_string(),
+                ))
+            }
+        }),
+    );
 }

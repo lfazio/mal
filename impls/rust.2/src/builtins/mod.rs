@@ -67,3 +67,55 @@ pub fn re(line: &str, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
 pub fn rep(line: &str, env: &Rc<RefCell<MalEnv>>) -> bool {
     printer::print(evaluation::eval(reader::read_str(line), env))
 }
+
+fn quasiquote_iter(list: &Rc<Vec<MalVal>>) -> MalReturn {
+    let mut new_list = vec![];
+
+    for elt in list.iter().rev() {
+        if let MalVal::List(seq) = elt {
+            if seq.len() == 2 && seq[0] == MalVal::Symbol("splice-unquote".to_string()) {
+                new_list = vec![
+                    MalVal::Symbol("concat".to_string()),
+                    seq[1].clone(),
+                    MalVal::List(Rc::new(new_list)),
+                ];
+                continue;
+            }
+        }
+
+        new_list = vec![
+            MalVal::Symbol("cons".to_string()),
+            quasiquote(elt)?,
+            MalVal::List(Rc::new(new_list.clone())),
+        ];
+    }
+
+    Ok(MalVal::List(Rc::new(new_list)))
+}
+
+pub fn quasiquote(ast: &MalVal) -> MalReturn {
+    let mut new_list = vec![];
+
+    if let MalVal::List(l) = ast {
+        if l.len() == 2 && l[0] == MalVal::Symbol("unquote".to_string()) {
+            return Ok(l[1].clone());
+        }
+
+        quasiquote_iter(l)
+    } else if let MalVal::Symbol(_) = ast {
+        new_list.insert(0, ast.clone());
+        new_list.insert(0, MalVal::Symbol("quote".to_string()));
+
+        Ok(MalVal::List(Rc::new(new_list)))
+    } else if let MalVal::Hashmap(_) = ast {
+        new_list = vec![MalVal::Symbol("quote".to_string()), ast.clone()];
+
+        Ok(MalVal::List(Rc::new(new_list)))
+    } else if let MalVal::Vector(seq) = ast {
+        new_list = vec![MalVal::Symbol("vec".to_string()), quasiquote_iter(seq)?];
+
+        Ok(MalVal::List(Rc::new(new_list)))
+    } else {
+        Ok(ast.clone())
+    }
+}

@@ -7,6 +7,8 @@ use crate::types::error::MalError;
 use crate::types::lambda::Lambda;
 use crate::types::{MalReturn, MalVal};
 
+use crate::builtins;
+
 pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
     let mut ast = input?;
     let mut env = env;
@@ -110,7 +112,13 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                         env = &repl_env;
                         continue;
                     }
-
+                    MalVal::Symbol(s) if s == "quote" => {
+                        return Ok(l[1].clone());
+                    }
+                    MalVal::Symbol(s) if s == "quasiquote" => {
+                        ast = builtins::quasiquote(&l[1])?;
+                        continue;
+                    }
                     _ => match eval(Ok(l[0].clone()), env) {
                         Ok(func @ MalVal::Function(_)) => {
                             let argv: Vec<MalVal> = l
@@ -133,8 +141,11 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                             ast = (*f.ast).clone();
                             continue;
                         }
-                        Ok(_) => {
-                            return Err(MalError::Error("try to call a non-function".to_string()));
+                        Ok(elt) => {
+                            return Err(MalError::Error(format!(
+                                "try to call a non-function: {}",
+                                elt.pr_str(true)
+                            )));
                         }
                         Err(e) => return Err(e),
                     },
