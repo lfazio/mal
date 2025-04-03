@@ -28,7 +28,7 @@ pub enum MalVal {
     List(Rc<Vec<MalVal>>),
     Vector(Rc<Vec<MalVal>>),
     Hashmap(Rc<HashMap<String, MalVal>>),
-    Function(fn(MalFunctionArgs) -> MalReturn),
+    Function(fn(&MalFunctionArgs) -> MalReturn),
     Lambda(Rc<Lambda>),
 }
 
@@ -47,7 +47,7 @@ fn escape_str(s: &str) -> String {
 impl MalVal {
     pub fn apply(&self, args: &[MalVal]) -> MalReturn {
         match &self {
-            MalVal::Function(f) => f(args.to_vec()),
+            MalVal::Function(f) => f(&args.to_vec()),
             MalVal::Lambda(l) => l.apply(args),
             _ => Err(MalError::Error("not a function".to_string())),
         }
