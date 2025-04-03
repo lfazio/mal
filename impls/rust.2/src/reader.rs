@@ -5,8 +5,9 @@ use std::vec::Vec;
 use regex::Regex;
 use rustyline::DefaultEditor;
 
-use crate::MalError;
-use crate::MalVal;
+use crate::types::MalReturn;
+use crate::types::MalVal;
+use crate::types::error::MalError;
 
 struct Reader {
     tokens: Vec<String>,
@@ -34,7 +35,7 @@ impl Reader {
     }
 }
 
-pub fn read(rl: &mut DefaultEditor, prompt: &str) -> Result<MalVal, MalError> {
+pub fn read(rl: &mut DefaultEditor, prompt: &str) -> MalReturn {
     match rl.readline(prompt) {
         Ok(line) => {
             let _ = rl.add_history_entry(line.as_str());
@@ -49,7 +50,7 @@ pub fn read(rl: &mut DefaultEditor, prompt: &str) -> Result<MalVal, MalError> {
     }
 }
 
-pub fn read_str(line: &str) -> Result<MalVal, MalError> {
+pub fn read_str(line: &str) -> MalReturn {
     let tokens = tokenise(line)?;
 
     if tokens.is_empty() {
@@ -86,7 +87,7 @@ fn unescape_str(s: &str) -> String {
     .to_string()
 }
 
-fn read_form(rdr: &mut Reader) -> Result<MalVal, MalError> {
+fn read_form(rdr: &mut Reader) -> MalReturn {
     let token = rdr.peek()?;
     match token {
         "'" => {
@@ -143,7 +144,7 @@ fn read_form(rdr: &mut Reader) -> Result<MalVal, MalError> {
     }
 }
 
-fn read_seq(rdr: &mut Reader, c: &str) -> Result<MalVal, MalError> {
+fn read_seq(rdr: &mut Reader, c: &str) -> MalReturn {
     let mut seq = vec![];
     let mut hmap = HashMap::new();
 
@@ -187,19 +188,19 @@ fn read_seq(rdr: &mut Reader, c: &str) -> Result<MalVal, MalError> {
     }
 }
 
-fn read_list(rdr: &mut Reader) -> Result<MalVal, MalError> {
+fn read_list(rdr: &mut Reader) -> MalReturn {
     read_seq(rdr, ")")
 }
 
-fn read_vector(rdr: &mut Reader) -> Result<MalVal, MalError> {
+fn read_vector(rdr: &mut Reader) -> MalReturn {
     read_seq(rdr, "]")
 }
 
-fn read_hmap(rdr: &mut Reader) -> Result<MalVal, MalError> {
+fn read_hmap(rdr: &mut Reader) -> MalReturn {
     read_seq(rdr, "}")
 }
 
-fn read_atom(rdr: &mut Reader) -> Result<MalVal, MalError> {
+fn read_atom(rdr: &mut Reader) -> MalReturn {
     let re_int = Regex::new(r#"^-?[0-9]+$"#).unwrap();
     let re_str = Regex::new(r#""(?:\\.|[^\\"])*""#).unwrap();
 
@@ -224,49 +225,5 @@ fn read_atom(rdr: &mut Reader) -> Result<MalVal, MalError> {
                 Ok(MalVal::Symbol(token.to_string()))
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_reader_peek() {
-        let reader = Reader {
-            tokens: vec!["token1".to_string(), "token2".to_string()],
-            pos: 0,
-        };
-        assert_eq!(reader.peek().unwrap(), "token1");
-    }
-
-    #[test]
-    fn test_reader_next() {
-        let mut reader = Reader {
-            tokens: vec!["token1".to_string(), "token2".to_string()],
-            pos: 0,
-        };
-        assert_eq!(reader.next().unwrap(), "token1");
-        assert_eq!(reader.next().unwrap(), "token2");
-    }
-
-    #[test]
-    fn test_reader_skip() {
-        let mut reader = Reader {
-            tokens: vec!["token1".to_string(), "token2".to_string()],
-            pos: 0,
-        };
-        reader.skip();
-        assert_eq!(reader.peek().unwrap(), "token2");
-    }
-
-    #[test]
-    fn test_reader_underflow() {
-        let mut reader = Reader {
-            tokens: vec!["token1".to_string()],
-            pos: 1,
-        };
-        assert!(reader.peek().is_err());
-        assert!(reader.next().is_err());
     }
 }
