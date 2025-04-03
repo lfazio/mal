@@ -11,6 +11,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
     let mut ast = input?;
     let mut env = env;
     let mut new_env: Rc<RefCell<MalEnv>>;
+    let repl_env;
 
     loop {
         // TCO loop
@@ -24,7 +25,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
             println!("EVAL: {}", &ast.pr_str(true));
         }
 
-        match ast.clone() {
+        match ast {
             MalVal::Symbol(k) => return env.borrow().get(&k),
             MalVal::Vector(v) => {
                 let mut s: Vec<MalVal> = vec![];
@@ -36,12 +37,12 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
             }
             MalVal::List(l) => {
                 if l.is_empty() {
-                    return Ok(ast);
+                    return Ok(MalVal::List(Rc::new(vec![])));
                 }
 
                 match &l[0] {
                     MalVal::Symbol(s) if s == "def!" => {
-                        let repl_env = get_env_repl(env);
+                        repl_env = get_env_repl(env);
                         let key = l[1].clone();
                         let val = eval(Ok(l[2].clone()), &repl_env)?;
                         repl_env.borrow_mut().set(&key.pr_str(true), &val);
@@ -72,15 +73,11 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                         continue;
                     }
                     MalVal::Symbol(s) if s == "do" => {
-                        let mut s = vec![];
-                        let len = if l.len() >= 2 { l.len() } else { 0 };
-                        for e in l.iter().skip(1).take(len) {
-                            s.push(eval(Ok(e.clone()), env)?);
+                        for e in l.iter().take(l.len() - 1).skip(1) {
+                            _ = eval(Ok(e.clone()), env)?;
                         }
-                        if len >= 2 {
-                            ast = l.last().unwrap().clone();
-                            continue;
-                        }
+                        ast = l.last().unwrap_or(&MalVal::Nil).clone();
+                        continue;
                     }
                     MalVal::Symbol(s) if s == "if" => match eval(Ok(l[1].clone()), env)? {
                         MalVal::Bool(false) | MalVal::Nil => {
@@ -103,7 +100,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                             eval,
                             l[2].clone(),
                             args,
-                            env.clone(),
+                            Rc::clone(env),
                         ))));
                     }
                     _ => match eval(Ok(l[0].clone()), env) {
