@@ -43,8 +43,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("No previous history.");
     }
 
-    let _ = builtins::re("(def! DEBUG-EVAL 1)", &env);
-
     // REPL
     while printer::print(evaluation::eval(reader::read(&mut rl, "user> "), &env)) {
         continue;

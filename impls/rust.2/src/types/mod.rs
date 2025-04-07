@@ -132,6 +132,22 @@ impl MalVal {
 
         result
     }
+
+    pub fn is_nil(&self) -> bool {
+        matches!(self, MalVal::Nil)
+    }
+
+    pub fn is_bool(&self) -> bool {
+        matches!(self, MalVal::Bool(_))
+    }
+
+    pub fn is_list(&self) -> bool {
+        matches!(self, MalVal::List(_))
+    }
+
+    pub fn is_vector(&self) -> bool {
+        matches!(self, MalVal::Vector(_))
+    }
 }
 
 impl PartialOrd for MalVal {

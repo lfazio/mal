@@ -27,7 +27,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
             println!("EVAL: {}", &ast.pr_str(true));
         }
 
-        match ast {
+        match &ast {
             MalVal::Symbol(k) => return env.borrow().get(&k),
             MalVal::Vector(v) => {
                 let mut s: Vec<MalVal> = vec![];
@@ -49,6 +49,30 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                         let val = eval(Ok(l[2].clone()), &repl_env)?;
                         let _ = repl_env.borrow_mut().set(&key.pr_str(true), &val);
                         return Ok(val);
+                    }
+                    MalVal::Symbol(s) if s == "defmacro!" => {
+                        let key = l[1].clone();
+                        let val = eval(Ok(l[2].clone()), env)?;
+
+                        match &val {
+                            MalVal::Lambda(l) => {
+                                let args = l.get_args();
+                                return env.borrow_mut().set(
+                                    &key.pr_str(true),
+                                    &MalVal::Lambda(Rc::new(Lambda::new_macro(
+                                        eval,
+                                        l.get_ast(),
+                                        MalVal::List(Rc::new(args)),
+                                        Rc::clone(env),
+                                    ))),
+                                );
+                            }
+                            _ => {
+                                return Err(MalError::Error(
+                                    "defmacro! expects a lambda".to_string(),
+                                ));
+                            }
+                        }
                     }
                     MalVal::Symbol(s) if s == "let*" => {
                         let bindings = l[1].clone();
@@ -130,15 +154,19 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                             return func.apply(&argv);
                         }
                         Ok(MalVal::Lambda(f)) => {
-                            let argv: Vec<MalVal> = l
-                                .iter()
-                                .skip(1)
-                                .map(|x| eval(Ok(x.clone()), env))
-                                .collect::<Result<Vec<_>, _>>()?;
+                            if f.is_macro() {
+                                ast = f.apply(&l[1..])?;
+                            } else {
+                                let argv: Vec<MalVal> = l
+                                    .iter()
+                                    .skip(1)
+                                    .map(|x| eval(Ok(x.clone()), env))
+                                    .collect::<Result<Vec<_>, _>>()?;
 
-                            new_env = Rc::new(RefCell::new(f.bind(&argv)));
-                            env = &new_env;
-                            ast = (*f.ast).clone();
+                                new_env = Rc::new(RefCell::new(f.bind(&argv)));
+                                env = &new_env;
+                                ast = (*f.ast).clone();
+                            }
                             continue;
                         }
                         Ok(elt) => {

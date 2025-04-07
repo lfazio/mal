@@ -10,8 +10,9 @@ use super::environment::MalEnv;
 pub struct Lambda {
     eval: MalFunction,
     pub ast: Rc<MalVal>,
-    args: Rc<Vec<MalVal>>,
+    pub args: Rc<Vec<MalVal>>,
     pub env: Rc<RefCell<MalEnv>>,
+    pub is_macro: bool,
 }
 
 impl Lambda {
@@ -24,6 +25,25 @@ impl Lambda {
                 _ => vec![],
             }),
             env,
+            is_macro: false,
+        }
+    }
+
+    pub fn new_macro(
+        eval: MalFunction,
+        ast: MalVal,
+        args: MalVal,
+        env: Rc<RefCell<MalEnv>>,
+    ) -> Lambda {
+        Lambda {
+            eval,
+            ast: Rc::new(ast),
+            args: Rc::new(match args {
+                MalVal::List(a) | MalVal::Vector(a) => a.to_vec(),
+                _ => vec![],
+            }),
+            env,
+            is_macro: true,
         }
     }
 
@@ -53,6 +73,18 @@ impl Lambda {
     pub fn apply(&self, argv: &[MalVal]) -> MalReturn {
         let new_env = Rc::new(RefCell::new(self.bind(argv)));
         (self.eval)(Ok((*self.ast).clone()), &new_env)
+    }
+
+    pub fn is_macro(&self) -> bool {
+        self.is_macro
+    }
+
+    pub fn get_args(&self) -> Vec<MalVal> {
+        (*self.args).clone()
+    }
+
+    pub fn get_ast(&self) -> MalVal {
+        (*self.ast).clone()
     }
 }
 

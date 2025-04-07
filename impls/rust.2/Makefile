@@ -8,6 +8,7 @@ STEP4 := $(EXEC_DIR)/step4_if_fn_do
 STEP5 := $(EXEC_DIR)/step5_tco
 STEP6 := $(EXEC_DIR)/step6_file
 STEP7 := $(EXEC_DIR)/step7_quote
+STEP8 := $(EXEC_DIR)/step8_macros
 STEPS := \
 	$(STEP0) \
 	$(STEP1) \
@@ -16,14 +17,15 @@ STEPS := \
 	$(STEP4) \
 	$(STEP5) \
 	$(STEP6) \
-	$(STEP7)
+	$(STEP7) \
+	$(STEP8)
 
 all: $(STEPS)
 
 $(STEPS): $(EXEC_DIR)/%: src/%.rs
 	cargo build --release --bin $*
 
-$(STEP1) $(STEP2) $(STEP3) $(STEP4) $(STEP5) $(STEP6) $(STEP7): \
+$(STEP1) $(STEP2) $(STEP3) $(STEP4) $(STEP5) $(STEP6) $(STEP7) $(STEP8): \
 	src/builtins/mod.rs \
 	src/builtins/core.rs \
 	src/builtins/math.rs \

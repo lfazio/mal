@@ -1,6 +1,6 @@
 [package]
 name = "mal"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2024"
 
 [dependencies]
@@ -38,3 +38,7 @@ path = "src/step6_file.rs"
 [[bin]]
 name = "step7_quote"
 path = "src/step7_quote.rs"
+
+[[bin]]
+name = "step8_macros"
+path = "src/step8_macros.rs"

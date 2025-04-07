@@ -58,6 +58,10 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         "(def! load-file (fn* (f) (eval (read-string (str \"(do \" (slurp f) \"\nnil)\")))))",
         env,
     );
+    let _ = re(
+        "(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))",
+        env,
+    );
 }
 
 pub fn re(line: &str, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
