@@ -28,14 +28,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 args.push(MalVal::Str(arg));
             }
         }
-        env.borrow_mut().set("*ARGV*", &MalVal::List(Rc::new(args)));
+        let _ = env.borrow_mut().set("*ARGV*", &MalVal::List(Rc::new(args)));
 
         if let Some(file) = arg1 {
             let _ = builtins::re(&format!("(load-file \"{}\")", file), &env);
             std::process::exit(0);
         }
     } else {
-        env.borrow_mut().set("*ARGV*", &MalVal::List(Rc::new(args)));
+        let _ = env.borrow_mut().set("*ARGV*", &MalVal::List(Rc::new(args)));
     }
 
     let mut rl = DefaultEditor::new()?;

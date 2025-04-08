@@ -9,7 +9,7 @@ use crate::types::error::MalError;
 use crate::reader;
 
 pub fn register(env: &Rc<RefCell<MalEnv>>) {
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "pr-str",
         &MalVal::Function(|args| {
             Ok(MalVal::Str(
@@ -21,7 +21,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "str",
         &MalVal::Function(|args| {
             Ok(MalVal::Str(
@@ -33,7 +33,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "prn",
         &MalVal::Function(|args| {
             let txt = args
@@ -46,7 +46,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "println",
         &MalVal::Function(|args| {
             let txt = args
@@ -59,7 +59,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "read-string",
         &MalVal::Function(|args| {
             if args.len() > 1 {
@@ -78,7 +78,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "slurp",
         &MalVal::Function(|args| {
             if args.len() > 1 {

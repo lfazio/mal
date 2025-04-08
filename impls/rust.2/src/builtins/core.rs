@@ -5,12 +5,12 @@ use crate::types::environment::MalEnv;
 use crate::types::error::MalError;
 
 pub fn register(env: &Rc<RefCell<MalEnv>>) {
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "list",
         &MalVal::Function(|args| Ok(MalVal::List(Rc::new(args.to_vec())))),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "list?",
         &MalVal::Function(|args| match args.first() {
             Some(MalVal::List(_)) => Ok(MalVal::Bool(true)),
@@ -18,7 +18,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "vector?",
         &MalVal::Function(|args| match args.first() {
             Some(MalVal::Vector(_)) => Ok(MalVal::Bool(true)),
@@ -26,7 +26,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "empty?",
         &MalVal::Function(|args| match args.first() {
             Some(MalVal::List(l)) | Some(MalVal::Vector(l)) => Ok(MalVal::Bool(l.is_empty())),
@@ -34,7 +34,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "count",
         &MalVal::Function(|args| match args.first() {
             Some(MalVal::Nil) => Ok(MalVal::Int(0)),
@@ -44,7 +44,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "atom?",
         &MalVal::Function(|args| match args.first() {
             Some(MalVal::Atom(_)) => Ok(MalVal::Bool(true)),
@@ -52,7 +52,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "atom",
         &MalVal::Function(|args| {
             if args.len() != 1 {
@@ -63,7 +63,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "deref",
         &MalVal::Function(|args| {
             if args.len() != 1 {
@@ -78,7 +78,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "reset!",
         &MalVal::Function(|args| {
             if args.len() != 2 {
@@ -94,7 +94,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "swap!",
         &MalVal::Function(|args| {
             if args.len() < 2 {
@@ -115,7 +115,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "cons",
         &MalVal::Function(|args| {
             if let MalVal::List(seq) = &args[1] {
@@ -140,7 +140,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "concat",
         &MalVal::Function(|args| {
             let mut concatenated = vec![];
@@ -161,7 +161,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
         }),
     );
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "vec",
         &MalVal::Function(|args| {
             if args.len() != 1 {

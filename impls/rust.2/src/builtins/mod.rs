@@ -19,7 +19,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
     string::register(env);
     math::register(env);
 
-    env.borrow_mut().set(
+    let _ = env.borrow_mut().set(
         "slurp",
         &MalVal::Function(|args| {
             if args.len() > 1 {
