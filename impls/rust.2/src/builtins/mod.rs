@@ -18,11 +18,13 @@ macro_rules! builtin_register {
 }
 
 mod core;
+mod exceptions;
 mod math;
 mod string;
 
 pub fn register(env: &Rc<RefCell<MalEnv>>) {
     core::register(env);
+    exceptions::register(env);
     string::register(env);
     math::register(env);
 

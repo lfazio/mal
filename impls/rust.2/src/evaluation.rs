@@ -143,6 +143,60 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                         ast = builtins::quasiquote(&l[1])?;
                         continue;
                     }
+                    MalVal::Symbol(s) if s == "try*" => {
+                        if l.len() < 3 {
+                            ast = l[1].clone();
+                            continue;
+                        }
+                        let try_ast = l[1].clone();
+                        let catch_ast = l[2].clone();
+                        let result = eval(Ok(try_ast), env);
+                        let exc = match result {
+                            Ok(v) => return Ok(v),
+                            Err(MalError::Exception(e)) => e,
+                            Err(MalError::Error(e)) => MalVal::Str(e),
+                            _ => {
+                                return Err(MalError::Error(
+                                    "try* expects a try* and catch* block".to_string(),
+                                ));
+                            }
+                        };
+
+                        match catch_ast {
+                            MalVal::List(seq) => {
+                                if seq.len() != 3 {
+                                    return Err(MalError::Error(
+                                        "catch* expects a list of three arguments".to_string(),
+                                    ));
+                                }
+                                match &seq[0] {
+                                    MalVal::Symbol(s) if s == "catch*" => {
+                                        let b = if let MalVal::Symbol(name) = seq[1].clone() {
+                                            name
+                                        } else {
+                                            return Err(MalError::Error(
+                                                "catch* expects a symbol as the first argument"
+                                                    .to_string(),
+                                            ));
+                                        };
+                                        let c = seq[2].clone();
+
+                                        new_env = Rc::new(RefCell::new(MalEnv::new(Some(
+                                            Rc::clone(env),
+                                        ))));
+                                        new_env.borrow_mut().set(&b, &exc)?;
+                                        ast = c;
+                                        env = &new_env;
+                                        continue;
+                                    }
+                                    _ => return Ok(seq[0].clone()),
+                                }
+                            }
+                            _ => {
+                                return Err(MalError::Error("catch* expects a list".to_string()));
+                            }
+                        }
+                    }
                     _ => match eval(Ok(l[0].clone()), env) {
                         Ok(func @ MalVal::Function(_)) => {
                             let argv: Vec<MalVal> = l
