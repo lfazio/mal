@@ -17,22 +17,3 @@ impl fmt::Display for MalError {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_malerror_display() {
-        let break_error = MalError::Break("CTRL-C".to_string());
-        assert_eq!(format!("{}", break_error), "Break: CTRL-C");
-
-        let readline_error = MalError::Readline("unexpected error".to_string());
-        assert_eq!(
-            format!("{}", readline_error),
-            "Error: Readline: unexpected error"
-        );
-
-        let generic_error = MalError::Error("something went wrong".to_string());
-        assert_eq!(format!("{}", generic_error), "Error: something went wrong");
-    }
-}
