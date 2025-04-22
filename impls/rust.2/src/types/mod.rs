@@ -15,7 +15,7 @@ use crate::types::error::MalError;
 use crate::types::lambda::Lambda;
 
 pub type MalReturn = Result<MalVal, MalError>;
-pub type MalFunctionArgs = Vec<MalVal>;
+pub type MalFunctionArgs = [MalVal];
 pub type MalFunction = fn(args: MalReturn, &Rc<RefCell<MalEnv>>) -> MalReturn;
 
 #[derive(Debug, Eq, Clone)]
@@ -48,7 +48,7 @@ fn escape_str(s: &str) -> String {
 impl MalVal {
     pub fn apply(&self, args: &[MalVal]) -> MalReturn {
         match &self {
-            MalVal::Function(f) => f(&args.to_vec()),
+            MalVal::Function(f) => f(args),
             MalVal::Lambda(l) => l.apply(args),
             _ => Err(MalError::Error("not a function".to_string())),
         }

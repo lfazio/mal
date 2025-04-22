@@ -80,26 +80,26 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
 
     let _ = env.borrow_mut().set(
         "=",
-        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("=", &args.to_vec())))),
+        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("=", args)))),
     );
 
     let _ = env.borrow_mut().set(
         "<",
-        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("<", &args.to_vec())))),
+        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("<", args)))),
     );
 
     let _ = env.borrow_mut().set(
         "<=",
-        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("<=", &args.to_vec())))),
+        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("<=", args)))),
     );
 
     let _ = env.borrow_mut().set(
         ">",
-        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp(">", &args.to_vec())))),
+        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp(">", args)))),
     );
 
     let _ = env.borrow_mut().set(
         ">=",
-        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp(">=", &args.to_vec())))),
+        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp(">=", args)))),
     );
 }
