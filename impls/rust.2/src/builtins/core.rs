@@ -5,7 +5,9 @@ use crate::types::environment::MalEnv;
 use crate::types::error::MalError;
 use crate::types::{MalReturn, MalVal};
 
-// macro to create la list
+use crate::function;
+use crate::hashmap;
+use crate::lambda;
 use crate::list;
 use crate::vector;
 
@@ -16,6 +18,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
     builtin_register!(env, "assoc", assoc);
     builtin_register!(env, "concat", concat);
     builtin_register!(env, "cons", cons);
+    builtin_register!(env, "conj", conj);
     builtin_register!(env, "contains?", contains);
     builtin_register!(env, "count", count);
     builtin_register!(env, "deref", deref);
@@ -23,6 +26,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
     builtin_register!(env, "empty?", is_empty);
     builtin_register!(env, "false?", is_false);
     builtin_register!(env, "first", first);
+    builtin_register!(env, "fn?", is_fn);
     builtin_register!(env, "get", get);
     builtin_register!(env, "hash-map", hash_map);
     builtin_register!(env, "keys", keys);
@@ -33,11 +37,15 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
     builtin_register!(env, "macro?", is_macro);
     builtin_register!(env, "map", map);
     builtin_register!(env, "map?", is_map);
+    builtin_register!(env, "meta", meta);
     builtin_register!(env, "nil?", is_nil);
     builtin_register!(env, "nth", nth);
+    builtin_register!(env, "number?", is_number);
     builtin_register!(env, "reset!", reset);
     builtin_register!(env, "rest", rest);
+    builtin_register!(env, "seq", seq);
     builtin_register!(env, "sequential?", is_sequential);
+    builtin_register!(env, "string?", is_string);
     builtin_register!(env, "swap!", swap);
     builtin_register!(env, "symbol", symbol);
     builtin_register!(env, "symbol?", is_symbol);
@@ -46,10 +54,68 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
     builtin_register!(env, "vec", vec);
     builtin_register!(env, "vector", vector);
     builtin_register!(env, "vector?", is_vector);
+    builtin_register!(env, "with-meta", with_meta);
 }
 
 fn list(args: &[MalVal]) -> MalReturn {
     Ok(list!(args.to_vec()))
+}
+
+fn with_meta(args: &[MalVal]) -> MalReturn {
+    if args.len() != 2 {
+        return Err(MalError::Error(
+            "with-meta expects two arguments".to_string(),
+        ));
+    }
+
+    match &args[0] {
+        MalVal::List(l, _) => Ok(list!((**l).clone(), args[1].clone())),
+        MalVal::Vector(v, _) => Ok(vector!((**v).clone(), args[1].clone())),
+        MalVal::Hashmap(h, _) => Ok(hashmap!((**h).clone(), args[1].clone())),
+        MalVal::Lambda(l, _) => Ok(lambda!((**l).clone(), args[1].clone())),
+        MalVal::Function(f, _) => Ok(function!(*f, args[1].clone())),
+        _ => Err(MalError::Error(
+            "with-meta expects a list, a vector an hashmap or a lambda as first argument"
+                .to_string(),
+        )),
+    }
+}
+
+fn meta(args: &[MalVal]) -> MalReturn {
+    if args.len() != 1 {
+        return Err(MalError::Error("meta expects one argument".to_string()));
+    }
+
+    match &args[0] {
+        MalVal::List(_, meta) => {
+            if let Some(m) = meta {
+                return Ok((**m).clone());
+            }
+        }
+        MalVal::Vector(_, meta) => {
+            if let Some(m) = meta {
+                return Ok((**m).clone());
+            }
+        }
+        MalVal::Hashmap(_, meta) => {
+            if let Some(m) = meta {
+                return Ok((**m).clone());
+            }
+        }
+        MalVal::Lambda(_, meta) => {
+            if let Some(m) = meta {
+                return Ok((**m).clone());
+            }
+        }
+        MalVal::Function(_, meta) => {
+            if let Some(m) = meta {
+                return Ok((**m).clone());
+            }
+        }
+        _ => return Ok(MalVal::Nil),
+    }
+
+    Ok(MalVal::Nil)
 }
 
 fn is_list(args: &[MalVal]) -> MalReturn {
@@ -84,15 +150,27 @@ fn is_sequential(args: &[MalVal]) -> MalReturn {
 
 fn is_empty(args: &[MalVal]) -> MalReturn {
     match args.first() {
-        Some(MalVal::List(l)) | Some(MalVal::Vector(l)) => Ok(MalVal::Bool(l.is_empty())),
+        Some(MalVal::List(l, _)) | Some(MalVal::Vector(l, _)) => Ok(MalVal::Bool(l.is_empty())),
         _ => Ok(MalVal::Bool(false)),
     }
 }
 
+fn is_fn(args: &[MalVal]) -> MalReturn {
+    Ok(MalVal::Bool(args[0].is_lambda() || args[0].is_function()))
+}
+
+fn is_string(args: &[MalVal]) -> MalReturn {
+    Ok(MalVal::Bool(args[0].is_string()))
+}
+
+fn is_number(args: &[MalVal]) -> MalReturn {
+    Ok(MalVal::Bool(args[0].is_int()))
+}
+
 fn count(args: &[MalVal]) -> MalReturn {
     match args.first() {
-        Some(MalVal::List(l)) => Ok(MalVal::Int(l.len() as i64)),
-        Some(MalVal::Vector(l)) => Ok(MalVal::Int(l.len() as i64)),
+        Some(MalVal::List(l, _)) => Ok(MalVal::Int(l.len() as i64)),
+        Some(MalVal::Vector(l, _)) => Ok(MalVal::Int(l.len() as i64)),
         _ => Ok(MalVal::Int(0)),
     }
 }
@@ -162,14 +240,14 @@ fn cons(args: &[MalVal]) -> MalReturn {
         return Err(MalError::Error("cons expects two arguments".to_string()));
     }
 
-    if let MalVal::List(seq) = &args[1] {
+    if let MalVal::List(seq, _) = &args[1] {
         return Ok(list!(
             vec![args[0].clone()]
                 .into_iter()
                 .chain(seq.iter().cloned())
                 .collect()
         ));
-    } else if let MalVal::Vector(seq) = &args[1] {
+    } else if let MalVal::Vector(seq, _) = &args[1] {
         return Ok(list!(
             vec![args[0].clone()]
                 .into_iter()
@@ -187,9 +265,9 @@ fn concat(args: &[MalVal]) -> MalReturn {
     let mut concatenated = vec![];
 
     for arg in args.iter() {
-        if let MalVal::List(seq) = arg {
+        if let MalVal::List(seq, _) = arg {
             concatenated.extend(seq.iter().cloned());
-        } else if let MalVal::Vector(seq) = arg {
+        } else if let MalVal::Vector(seq, _) = arg {
             concatenated.extend(seq.iter().cloned());
         } else {
             return Err(MalError::Error(
@@ -206,12 +284,12 @@ fn vec(args: &[MalVal]) -> MalReturn {
         return Err(MalError::Error("vec expects one argument".to_string()));
     }
 
-    if let MalVal::List(l) = &args[0] {
+    if let MalVal::List(l, _) = &args[0] {
         let vec: Vec<MalVal> = l.iter().cloned().collect();
         return Ok(vector!(vec));
     }
 
-    if let MalVal::Vector(_) = &args[0] {
+    if let MalVal::Vector(_, _) = &args[0] {
         return Ok(args[0].clone());
     }
 
@@ -231,13 +309,13 @@ fn nth(args: &[MalVal]) -> MalReturn {
     };
 
     match &args[0] {
-        MalVal::List(l) => {
+        MalVal::List(l, _) => {
             if index < 0 || index >= l.len() as i64 {
                 return Err(MalError::Error("index out of bounds".to_string()));
             }
             Ok(l[index as usize].clone())
         }
-        MalVal::Vector(v) => {
+        MalVal::Vector(v, _) => {
             if index < 0 || index >= v.len() as i64 {
                 return Err(MalError::Error("index out of bounds".to_string()));
             }
@@ -256,22 +334,20 @@ fn first(args: &[MalVal]) -> MalReturn {
     }
 
     match &args[0] {
-        MalVal::List(l) => {
+        MalVal::List(l, _) => {
             if l.is_empty() || l[0].is_nil() {
                 return Ok(MalVal::Nil);
             }
             Ok(l[0].clone())
         }
-        MalVal::Vector(v) => {
+        MalVal::Vector(v, _) => {
             if v.is_empty() || v[0].is_nil() {
                 return Ok(MalVal::Nil);
             }
             Ok(v[0].clone())
         }
         MalVal::Nil => Ok(MalVal::Nil),
-        _ => Err(MalError::Error(
-            "first expects a list or a vector".to_string(),
-        )),
+        _ => Err(MalError::Exception(args[0].clone())),
     }
 }
 
@@ -281,13 +357,13 @@ fn rest(args: &[MalVal]) -> MalReturn {
     }
 
     match &args[0] {
-        MalVal::List(l) => {
+        MalVal::List(l, _) => {
             if l.is_empty() || l[0].is_nil() {
                 return Ok(list!());
             }
             Ok(list!(l[1..].to_vec()))
         }
-        MalVal::Vector(v) => {
+        MalVal::Vector(v, _) => {
             if v.is_empty() || v[0].is_nil() {
                 return Ok(list!());
             }
@@ -305,7 +381,7 @@ fn is_macro(args: &[MalVal]) -> MalReturn {
         return Err(MalError::Error("macro? expects one argument".to_string()));
     }
 
-    if let MalVal::Lambda(l) = &args[0] {
+    if let MalVal::Lambda(l, _) = &args[0] {
         return Ok(MalVal::Bool(l.is_macro()));
     }
 
@@ -433,7 +509,7 @@ fn is_map(args: &[MalVal]) -> MalReturn {
     }
 
     match &args[0] {
-        MalVal::Hashmap(_) => Ok(MalVal::Bool(true)),
+        MalVal::Hashmap(_, _) => Ok(MalVal::Bool(true)),
         _ => Ok(MalVal::Bool(false)),
     }
 }
@@ -445,7 +521,7 @@ fn assoc(args: &[MalVal]) -> MalReturn {
         ));
     }
 
-    if let MalVal::Hashmap(hm) = &args[0] {
+    if let MalVal::Hashmap(hm, _) = &args[0] {
         let mut new_map: HashMap<String, MalVal> = HashMap::new();
         for (k, v) in hm.iter() {
             new_map.insert(k.clone(), v.clone());
@@ -479,7 +555,7 @@ fn dissoc(args: &[MalVal]) -> MalReturn {
         ));
     }
 
-    if let MalVal::Hashmap(hm) = &args[0] {
+    if let MalVal::Hashmap(hm, _) = &args[0] {
         let mut new_map: HashMap<String, MalVal> = HashMap::new();
         for (k, v) in hm.iter() {
             new_map.insert(k.clone(), v.clone());
@@ -509,7 +585,7 @@ fn get(args: &[MalVal]) -> MalReturn {
         return Ok(MalVal::Nil);
     }
 
-    if let MalVal::Hashmap(hm) = &args[0] {
+    if let MalVal::Hashmap(hm, _) = &args[0] {
         if let MalVal::Str(s) = &args[1] {
             return Ok(hm.get(s).cloned().unwrap_or(MalVal::Nil));
         }
@@ -527,7 +603,7 @@ fn contains(args: &[MalVal]) -> MalReturn {
         ));
     }
 
-    if let MalVal::Hashmap(h) = &args[0] {
+    if let MalVal::Hashmap(h, _) = &args[0] {
         if let MalVal::Str(s) = &args[1] {
             return Ok(MalVal::Bool(h.contains_key(s)));
         }
@@ -541,7 +617,7 @@ fn keys(args: &[MalVal]) -> MalReturn {
         return Err(MalError::Error("keys expects one argument".to_string()));
     }
 
-    if let MalVal::Hashmap(hm) = &args[0] {
+    if let MalVal::Hashmap(hm, _) = &args[0] {
         return Ok(list!(hm.keys().map(|k| MalVal::Str(k.clone())).collect()));
     }
 
@@ -555,7 +631,7 @@ fn vals(args: &[MalVal]) -> MalReturn {
         return Err(MalError::Error("vals expects one argument".to_string()));
     }
 
-    if let MalVal::Hashmap(hm) = &args[0] {
+    if let MalVal::Hashmap(hm, _) = &args[0] {
         return Ok(list!(hm.values().cloned().collect()));
     }
 
@@ -573,13 +649,13 @@ fn apply(args: &[MalVal]) -> MalReturn {
 
     let func = &args[0];
     match &func {
-        MalVal::Function(_) | MalVal::Lambda(_) => {
+        MalVal::Function(_, _) | MalVal::Lambda(_, _) => {
             let mut new_args: Vec<MalVal> = vec![];
 
             for arg in args.iter().skip(1) {
-                if let MalVal::List(seq) = arg {
+                if let MalVal::List(seq, _) = arg {
                     new_args.extend(seq.iter().cloned());
-                } else if let MalVal::Vector(seq) = arg {
+                } else if let MalVal::Vector(seq, _) = arg {
                     new_args.extend(seq.iter().cloned());
                 } else {
                     new_args.push(arg.clone());
@@ -601,15 +677,15 @@ fn map(args: &[MalVal]) -> MalReturn {
 
     let mut new_args: Vec<MalVal> = vec![];
     match &args[0] {
-        MalVal::Lambda(func) => {
+        MalVal::Lambda(func, _) => {
             for arg in args.iter().skip(1) {
-                if let MalVal::List(seq) = arg {
+                if let MalVal::List(seq, _) = arg {
                     let mapped: Vec<MalVal> = seq
                         .iter()
                         .map(|x| func.apply(&[x.clone()]))
                         .collect::<Result<Vec<_>, _>>()?;
                     new_args.push(list!(mapped));
-                } else if let MalVal::Vector(seq) = arg {
+                } else if let MalVal::Vector(seq, _) = arg {
                     let mapped: Vec<MalVal> = seq
                         .iter()
                         .map(|x| func.apply(&[x.clone()]))
@@ -618,15 +694,15 @@ fn map(args: &[MalVal]) -> MalReturn {
                 }
             }
         }
-        MalVal::Function(func) => {
+        MalVal::Function(func, _) => {
             for arg in args.iter().skip(1) {
-                if let MalVal::List(seq) = arg {
+                if let MalVal::List(seq, _) = arg {
                     let mapped: Vec<MalVal> = seq
                         .iter()
                         .map(|x| func(&[x.clone()]))
                         .collect::<Result<Vec<_>, _>>()?;
                     new_args.push(list!(mapped));
-                } else if let MalVal::Vector(seq) = arg {
+                } else if let MalVal::Vector(seq, _) = arg {
                     let mapped: Vec<MalVal> = seq
                         .iter()
                         .map(|x| func(&[x.clone()]))
@@ -639,4 +715,69 @@ fn map(args: &[MalVal]) -> MalReturn {
     }
 
     Ok(new_args.last().unwrap_or(&MalVal::Nil).clone())
+}
+
+fn conj(args: &[MalVal]) -> MalReturn {
+    if args.len() < 2 {
+        return Err(MalError::Error(
+            "conj expects at least two arguments".to_string(),
+        ));
+    }
+
+    if let MalVal::List(seq, _) = &args[0] {
+        let mut new_seq: Vec<MalVal> = args[1..].to_vec().iter().rev().cloned().collect();
+        new_seq.extend(seq.iter().cloned());
+        return Ok(list!(new_seq));
+    } else if let MalVal::Vector(seq, _) = &args[0] {
+        let mut new_seq: Vec<MalVal> = seq.iter().cloned().collect();
+        new_seq.extend(args[1..].to_vec().iter().cloned());
+        return Ok(vector!(new_seq));
+    }
+
+    Err(MalError::Error(
+        "conj expects a list or a vector as first argument".to_string(),
+    ))
+}
+
+fn seq(args: &[MalVal]) -> MalReturn {
+    if args.len() != 1 {
+        return Err(MalError::Error("seq expects one argument".to_string()));
+    }
+
+    if args[0] == MalVal::Nil {
+        return Ok(MalVal::Nil);
+    }
+
+    if let MalVal::List(seq, meta) = &args[0] {
+        if seq.is_empty() {
+            return Ok(MalVal::Nil);
+        }
+
+        let mut new_seq = args[1..].iter().skip(1).rev().cloned().collect::<Vec<_>>();
+        new_seq.append(&mut seq.iter().cloned().collect::<Vec<_>>());
+        Ok(MalVal::List(Rc::new(new_seq), meta.clone()))
+    } else if let MalVal::Vector(seq, meta) = &args[0] {
+        if seq.is_empty() {
+            return Ok(MalVal::Nil);
+        }
+
+        Ok(MalVal::List(seq.clone(), meta.clone()))
+    } else if let MalVal::Str(seq) = &args[0] {
+        if seq.is_empty() {
+            return Ok(MalVal::Nil);
+        }
+
+        Ok(MalVal::List(
+            Rc::new(
+                seq.chars()
+                    .map(|c| MalVal::Str(c.to_string()))
+                    .collect::<Vec<_>>(),
+            ),
+            None,
+        ))
+    } else {
+        Err(MalError::Error(
+            "seq expects a list, vector or string as first argument".to_string(),
+        ))
+    }
 }

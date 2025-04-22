@@ -25,7 +25,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
         // TCO loop
         let debug_eval = match env.borrow().get("DEBUG-EVAL") {
             Ok(MalVal::Bool(debug)) => debug,
-            Ok(MalVal::Int(_)) | Ok(MalVal::Str(_)) | Ok(MalVal::List(_)) => true,
+            Ok(MalVal::Int(_)) | Ok(MalVal::Str(_)) | Ok(MalVal::List(_, _)) => true,
             _ => false,
         };
 
@@ -35,7 +35,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
 
         match &ast {
             MalVal::Symbol(k) => return env.borrow().get(k),
-            MalVal::Vector(v) => {
+            MalVal::Vector(v, _) => {
                 let mut s: Vec<MalVal> = vec![];
                 for v in v.iter() {
                     s.push(eval(Ok(v.clone()), env)?);
@@ -43,7 +43,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
 
                 return Ok(vector!(s));
             }
-            MalVal::List(l) => {
+            MalVal::List(l, _) => {
                 if l.is_empty() {
                     return Ok(list!());
                 }
@@ -61,7 +61,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                         let val = eval(Ok(l[2].clone()), env)?;
 
                         match &val {
-                            MalVal::Lambda(l) => {
+                            MalVal::Lambda(l, _) => {
                                 let args = l.get_args();
                                 return env.borrow_mut().set(
                                     &key.pr_str(true),
@@ -85,7 +85,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                         let body = l[2].clone();
 
                         match bindings {
-                            MalVal::List(bindings) | MalVal::Vector(bindings) => {
+                            MalVal::List(bindings, _) | MalVal::Vector(bindings, _) => {
                                 new_env = new_env!(Some(Rc::clone(env)));
                                 for i in (0..bindings.len()).step_by(2) {
                                     let key = bindings[i].clone();
@@ -169,7 +169,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                         };
 
                         match catch_ast {
-                            MalVal::List(seq) => {
+                            MalVal::List(seq, _) => {
                                 if seq.len() != 3 {
                                     return Err(MalError::Error(
                                         "catch* expects a list of three arguments".to_string(),
@@ -202,7 +202,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                         }
                     }
                     _ => match eval(Ok(l[0].clone()), env) {
-                        Ok(func @ MalVal::Function(_)) => {
+                        Ok(func @ MalVal::Function(_, _)) => {
                             let argv: Vec<MalVal> = l
                                 .iter()
                                 .skip(1)
@@ -211,7 +211,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
 
                             return func.apply(&argv);
                         }
-                        Ok(MalVal::Lambda(f)) => {
+                        Ok(MalVal::Lambda(f, _)) => {
                             if f.is_macro() {
                                 ast = f.apply(&l[1..])?;
                             } else {
@@ -237,7 +237,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                     },
                 }
             }
-            MalVal::Hashmap(h) => {
+            MalVal::Hashmap(h, _) => {
                 let mut new_hm: HashMap<String, MalVal> = HashMap::new();
                 let entries: Vec<_> = h.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
                 for (k, v) in entries {

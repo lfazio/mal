@@ -24,7 +24,7 @@ impl Lambda {
             eval,
             ast: Rc::new(ast),
             args: Rc::new(match args {
-                MalVal::List(a) | MalVal::Vector(a) => a.to_vec(),
+                MalVal::List(a, _) | MalVal::Vector(a, _) => a.to_vec(),
                 _ => vec![],
             }),
             env,
@@ -42,7 +42,7 @@ impl Lambda {
             eval,
             ast: Rc::new(ast),
             args: Rc::new(match args {
-                MalVal::List(a) | MalVal::Vector(a) => a.to_vec(),
+                MalVal::List(a, _) | MalVal::Vector(a, _) => a.to_vec(),
                 _ => vec![],
             }),
             env,

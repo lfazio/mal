@@ -13,7 +13,7 @@ use crate::reader;
 #[macro_export]
 macro_rules! builtin_register {
     ($env:expr, $name:expr, $func:expr) => {
-        let _ = $env.borrow_mut().set($name, &MalVal::Function($func));
+        let _ = $env.borrow_mut().set($name, &MalVal::Function($func, None));
     };
 }
 
@@ -21,12 +21,14 @@ mod core;
 mod exceptions;
 mod math;
 mod string;
+mod time;
 
 pub fn register(env: &Rc<RefCell<MalEnv>>) {
     core::register(env);
     exceptions::register(env);
-    string::register(env);
     math::register(env);
+    string::register(env);
+    time::register(env);
 
     builtin_register!(env, "slurp", slurp);
 
@@ -84,7 +86,7 @@ fn quasiquote_iter(list: &Rc<Vec<MalVal>>) -> MalReturn {
     let mut new_list = vec![];
 
     for elt in list.iter().rev() {
-        if let MalVal::List(seq) = elt {
+        if let MalVal::List(seq, _) = elt {
             if seq.len() == 2 && seq[0] == MalVal::Symbol("splice-unquote".to_string()) {
                 new_list = vec![
                     MalVal::Symbol("concat".to_string()),
@@ -108,7 +110,7 @@ fn quasiquote_iter(list: &Rc<Vec<MalVal>>) -> MalReturn {
 pub fn quasiquote(ast: &MalVal) -> MalReturn {
     let mut new_list = vec![];
 
-    if let MalVal::List(l) = ast {
+    if let MalVal::List(l, _) = ast {
         if l.len() == 2 && l[0] == MalVal::Symbol("unquote".to_string()) {
             return Ok(l[1].clone());
         }
@@ -119,11 +121,11 @@ pub fn quasiquote(ast: &MalVal) -> MalReturn {
         new_list.insert(0, MalVal::Symbol("quote".to_string()));
 
         Ok(list!(new_list))
-    } else if let MalVal::Hashmap(_) = ast {
+    } else if let MalVal::Hashmap(_, _) = ast {
         new_list = vec![MalVal::Symbol("quote".to_string()), ast.clone()];
 
         Ok(list!(new_list))
-    } else if let MalVal::Vector(seq) = ast {
+    } else if let MalVal::Vector(seq, _) = ast {
         new_list = vec![MalVal::Symbol("vec".to_string()), quasiquote_iter(seq)?];
 
         Ok(list!(new_list))

@@ -1,8 +1,9 @@
+use std::io::Write;
 use std::{cell::RefCell, rc::Rc};
 
-use crate::types::MalVal;
 use crate::types::environment::MalEnv;
 use crate::types::error::MalError;
+use crate::types::{MalReturn, MalVal};
 
 use crate::reader;
 
@@ -62,4 +63,27 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
             ))
         }
     });
+
+    builtin_register!(env, "readline", readline);
+}
+
+fn readline(args: &[MalVal]) -> MalReturn {
+    if args.len() > 1 {
+        return Err(MalError::Error(
+            "readline expects only one string".to_string(),
+        ));
+    }
+    if let Some(MalVal::Str(prompt)) = args.first() {
+        print!("{}", prompt);
+        std::io::stdout().flush().unwrap();
+        let mut input = String::new();
+        std::io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
+        Ok(MalVal::Str(input.trim_end().to_string()))
+    } else {
+        Err(MalError::Error(
+            "readline expects one argument of string type".to_string(),
+        ))
+    }
 }
