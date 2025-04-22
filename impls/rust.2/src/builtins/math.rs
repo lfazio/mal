@@ -26,80 +26,49 @@ fn fn_cmp(op: &str, args: &[MalVal]) -> bool {
 }
 
 pub fn register(env: &Rc<RefCell<MalEnv>>) {
-    let _ = env.borrow_mut().set(
-        "+",
-        &MalVal::Function(|args| {
-            Ok(MalVal::Int(fn_op(
-                "+",
-                &args
-                    .iter()
-                    .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
-                    .collect::<Vec<_>>(),
-            )))
-        }),
-    );
+    builtin_register!(env, "+", |args| {
+        Ok(MalVal::Int(fn_op(
+            "+",
+            &args
+                .iter()
+                .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
+                .collect::<Vec<_>>(),
+        )))
+    });
 
-    let _ = env.borrow_mut().set(
-        "-",
-        &MalVal::Function(|args| {
-            Ok(MalVal::Int(fn_op(
-                "-",
-                &args
-                    .iter()
-                    .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
-                    .collect::<Vec<_>>(),
-            )))
-        }),
-    );
+    builtin_register!(env, "-", |args| {
+        Ok(MalVal::Int(fn_op(
+            "-",
+            &args
+                .iter()
+                .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
+                .collect::<Vec<_>>(),
+        )))
+    });
 
-    let _ = env.borrow_mut().set(
-        "*",
-        &MalVal::Function(|args| {
-            Ok(MalVal::Int(fn_op(
-                "*",
-                &args
-                    .iter()
-                    .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
-                    .collect::<Vec<_>>(),
-            )))
-        }),
-    );
+    builtin_register!(env, "*", |args| {
+        Ok(MalVal::Int(fn_op(
+            "*",
+            &args
+                .iter()
+                .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
+                .collect::<Vec<_>>(),
+        )))
+    });
 
-    let _ = env.borrow_mut().set(
-        "/",
-        &MalVal::Function(|args| {
-            Ok(MalVal::Int(fn_op(
-                "/",
-                &args
-                    .iter()
-                    .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
-                    .collect::<Vec<_>>(),
-            )))
-        }),
-    );
+    builtin_register!(env, "/", |args| {
+        Ok(MalVal::Int(fn_op(
+            "/",
+            &args
+                .iter()
+                .map(|x| if let MalVal::Int(v) = x { *v } else { 0 })
+                .collect::<Vec<_>>(),
+        )))
+    });
 
-    let _ = env.borrow_mut().set(
-        "=",
-        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("=", args)))),
-    );
-
-    let _ = env.borrow_mut().set(
-        "<",
-        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("<", args)))),
-    );
-
-    let _ = env.borrow_mut().set(
-        "<=",
-        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp("<=", args)))),
-    );
-
-    let _ = env.borrow_mut().set(
-        ">",
-        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp(">", args)))),
-    );
-
-    let _ = env.borrow_mut().set(
-        ">=",
-        &MalVal::Function(|args| Ok(MalVal::Bool(fn_cmp(">=", args)))),
-    );
+    builtin_register!(env, "=", |args| Ok(MalVal::Bool(fn_cmp("=", args))));
+    builtin_register!(env, "<", |args| Ok(MalVal::Bool(fn_cmp("<", args))));
+    builtin_register!(env, "<=", |args| Ok(MalVal::Bool(fn_cmp("<=", args))));
+    builtin_register!(env, ">", |args| Ok(MalVal::Bool(fn_cmp(">", args))));
+    builtin_register!(env, ">=", |args| Ok(MalVal::Bool(fn_cmp(">=", args))));
 }

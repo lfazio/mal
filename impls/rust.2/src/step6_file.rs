@@ -13,6 +13,7 @@ use crate::types::MalVal;
 use crate::types::environment::MalEnv;
 use crate::types::error::MalError;
 
+#[macro_use]
 mod builtins;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

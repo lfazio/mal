@@ -10,6 +10,13 @@ use crate::evaluation;
 use crate::printer;
 use crate::reader;
 
+#[macro_export]
+macro_rules! builtin_register {
+    ($env:expr, $name:expr, $func:expr) => {
+        let _ = $env.borrow_mut().set($name, &MalVal::Function($func));
+    };
+}
+
 mod core;
 mod math;
 mod string;
@@ -19,39 +26,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
     string::register(env);
     math::register(env);
 
-    let _ = env.borrow_mut().set(
-        "slurp",
-        &MalVal::Function(|args| {
-            if args.len() > 1 {
-                return Err(MalError::Error(
-                    "read-string expects only one string".to_string(),
-                ));
-            }
-
-            if let Some(MalVal::Str(path)) = args.first() {
-                let mut file = if let Ok(fd) = fs::File::open(path) {
-                    fd
-                } else {
-                    return Err(MalError::Error(format!("Failed to open file {}", path)));
-                };
-                let mut contents = String::new();
-                match file.read_to_string(&mut contents) {
-                    Ok(_) => {}
-                    Err(e) => {
-                        return Err(MalError::Error(format!(
-                            "Failed to read file {}: {}",
-                            path, e
-                        )));
-                    }
-                }
-                Ok(MalVal::Str(contents))
-            } else {
-                Err(MalError::Error(
-                    "slurp expects one argument of string type".to_string(),
-                ))
-            }
-        }),
-    );
+    builtin_register!(env, "slurp", slurp);
 
     let _ = re("(def! not (fn* (a) (if a false true)))", env);
     let _ = re(
@@ -70,6 +45,37 @@ pub fn re(line: &str, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
 
 pub fn rep(line: &str, env: &Rc<RefCell<MalEnv>>) -> bool {
     printer::print(evaluation::eval(reader::read_str(line), env))
+}
+
+fn slurp(args: &[MalVal]) -> MalReturn {
+    if args.len() > 1 {
+        return Err(MalError::Error(
+            "read-string expects only one string".to_string(),
+        ));
+    }
+
+    if let Some(MalVal::Str(path)) = args.first() {
+        let mut file = if let Ok(fd) = fs::File::open(path) {
+            fd
+        } else {
+            return Err(MalError::Error(format!("Failed to open file {}", path)));
+        };
+        let mut contents = String::new();
+        match file.read_to_string(&mut contents) {
+            Ok(_) => {}
+            Err(e) => {
+                return Err(MalError::Error(format!(
+                    "Failed to read file {}: {}",
+                    path, e
+                )));
+            }
+        }
+        Ok(MalVal::Str(contents))
+    } else {
+        Err(MalError::Error(
+            "slurp expects one argument of string type".to_string(),
+        ))
+    }
 }
 
 fn quasiquote_iter(list: &Rc<Vec<MalVal>>) -> MalReturn {

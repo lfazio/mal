@@ -12,6 +12,7 @@ use types::MalVal;
 use types::environment::MalEnv;
 use types::error::MalError;
 
+#[macro_use]
 mod builtins;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
