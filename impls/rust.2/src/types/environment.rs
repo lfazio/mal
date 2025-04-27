@@ -49,7 +49,7 @@ pub fn get_env_repl(env: &Rc<RefCell<MalEnv>>) -> Rc<RefCell<MalEnv>> {
 #[macro_export]
 macro_rules! set_env {
     ($env:expr, $key:expr, $val:expr) => {
-        $env.set($key, $val)
+        let _ = $env.set($key, $val);
     };
 }
 
