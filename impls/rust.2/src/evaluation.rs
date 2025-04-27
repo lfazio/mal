@@ -9,6 +9,8 @@ use crate::types::{MalReturn, MalVal};
 
 use crate::builtins;
 
+use crate::list;
+
 pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
     let mut ast = input?;
     let mut env = env;
@@ -28,7 +30,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
         }
 
         match &ast {
-            MalVal::Symbol(k) => return env.borrow().get(&k),
+            MalVal::Symbol(k) => return env.borrow().get(k),
             MalVal::Vector(v) => {
                 let mut s: Vec<MalVal> = vec![];
                 for v in v.iter() {
@@ -39,7 +41,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
             }
             MalVal::List(l) => {
                 if l.is_empty() {
-                    return Ok(MalVal::List(Rc::new(vec![])));
+                    return Ok(list!());
                 }
 
                 match &l[0] {
@@ -62,7 +64,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                                     &MalVal::Lambda(Rc::new(Lambda::new_macro(
                                         eval,
                                         l.get_ast(),
-                                        MalVal::List(Rc::new(args)),
+                                        list!(args),
                                         Rc::clone(env),
                                     ))),
                                 );

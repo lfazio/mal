@@ -5,6 +5,9 @@ use crate::types::environment::MalEnv;
 use crate::types::error::MalError;
 use crate::types::{MalReturn, MalVal};
 
+// macro to create la list
+use crate::list;
+
 pub fn register(env: &Rc<RefCell<MalEnv>>) {
     builtin_register!(env, "apply", apply);
     builtin_register!(env, "atom", atom);
@@ -45,7 +48,7 @@ pub fn register(env: &Rc<RefCell<MalEnv>>) {
 }
 
 fn list(args: &[MalVal]) -> MalReturn {
-    Ok(MalVal::List(Rc::new(args.to_vec())))
+    Ok(list!(args.to_vec()))
 }
 
 fn is_list(args: &[MalVal]) -> MalReturn {
@@ -159,19 +162,19 @@ fn cons(args: &[MalVal]) -> MalReturn {
     }
 
     if let MalVal::List(seq) = &args[1] {
-        return Ok(MalVal::List(Rc::new(
+        return Ok(list!(
             vec![args[0].clone()]
                 .into_iter()
                 .chain(seq.iter().cloned())
-                .collect(),
-        )));
+                .collect()
+        ));
     } else if let MalVal::Vector(seq) = &args[1] {
-        return Ok(MalVal::List(Rc::new(
+        return Ok(list!(
             vec![args[0].clone()]
                 .into_iter()
                 .chain(seq.iter().cloned())
-                .collect(),
-        )));
+                .collect()
+        ));
     }
 
     Err(MalError::Error(
@@ -194,7 +197,7 @@ fn concat(args: &[MalVal]) -> MalReturn {
         }
     }
 
-    Ok(MalVal::List(Rc::new(concatenated)))
+    Ok(list!(concatenated))
 }
 
 fn vec(args: &[MalVal]) -> MalReturn {
@@ -279,17 +282,17 @@ fn rest(args: &[MalVal]) -> MalReturn {
     match &args[0] {
         MalVal::List(l) => {
             if l.is_empty() || l[0].is_nil() {
-                return Ok(MalVal::List(Rc::new(vec![])));
+                return Ok(list!());
             }
-            Ok(MalVal::List(Rc::new(l[1..].to_vec())))
+            Ok(list!(l[1..].to_vec()))
         }
         MalVal::Vector(v) => {
             if v.is_empty() || v[0].is_nil() {
-                return Ok(MalVal::List(Rc::new(vec![])));
+                return Ok(list!());
             }
-            Ok(MalVal::List(Rc::new(v[1..].to_vec())))
+            Ok(list!(v[1..].to_vec()))
         }
-        MalVal::Nil => Ok(MalVal::List(Rc::new(vec![]))),
+        MalVal::Nil => Ok(list!()),
         _ => Err(MalError::Error(
             "rest expects a list or a vector".to_string(),
         )),
@@ -538,9 +541,7 @@ fn keys(args: &[MalVal]) -> MalReturn {
     }
 
     if let MalVal::Hashmap(hm) = &args[0] {
-        return Ok(MalVal::List(Rc::new(
-            hm.keys().map(|k| MalVal::Str(k.clone())).collect(),
-        )));
+        return Ok(list!(hm.keys().map(|k| MalVal::Str(k.clone())).collect()));
     }
 
     Err(MalError::Error(
@@ -554,7 +555,7 @@ fn vals(args: &[MalVal]) -> MalReturn {
     }
 
     if let MalVal::Hashmap(hm) = &args[0] {
-        return Ok(MalVal::List(Rc::new(hm.values().cloned().collect())));
+        return Ok(list!(hm.values().cloned().collect()));
     }
 
     Err(MalError::Error(
@@ -606,13 +607,13 @@ fn map(args: &[MalVal]) -> MalReturn {
                         .iter()
                         .map(|x| func.apply(&[x.clone()]))
                         .collect::<Result<Vec<_>, _>>()?;
-                    new_args.push(MalVal::List(Rc::new(mapped)));
+                    new_args.push(list!(mapped));
                 } else if let MalVal::Vector(seq) = arg {
                     let mapped: Vec<MalVal> = seq
                         .iter()
                         .map(|x| func.apply(&[x.clone()]))
                         .collect::<Result<Vec<_>, _>>()?;
-                    new_args.push(MalVal::List(Rc::new(mapped)));
+                    new_args.push(list!(mapped));
                 }
             }
         }
@@ -623,13 +624,13 @@ fn map(args: &[MalVal]) -> MalReturn {
                         .iter()
                         .map(|x| func(&[x.clone()]))
                         .collect::<Result<Vec<_>, _>>()?;
-                    new_args.push(MalVal::List(Rc::new(mapped)));
+                    new_args.push(list!(mapped));
                 } else if let MalVal::Vector(seq) = arg {
                     let mapped: Vec<MalVal> = seq
                         .iter()
                         .map(|x| func(&[x.clone()]))
                         .collect::<Result<Vec<_>, _>>()?;
-                    new_args.push(MalVal::List(Rc::new(mapped)));
+                    new_args.push(list!(mapped));
                 }
             }
         }

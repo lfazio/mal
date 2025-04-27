@@ -9,6 +9,9 @@ use crate::types::MalReturn;
 use crate::types::MalVal;
 use crate::types::error::MalError;
 
+// macro to create a list
+use crate::list;
+
 struct Reader {
     tokens: Vec<String>,
     pos: usize,
@@ -92,47 +95,47 @@ fn read_form(rdr: &mut Reader) -> MalReturn {
     match token {
         "'" => {
             rdr.skip();
-            Ok(MalVal::List(Rc::new(vec![
+            Ok(list!(vec![
                 MalVal::Symbol("quote".to_string()),
                 read_form(rdr)?,
-            ])))
+            ]))
         }
         "`" => {
             rdr.skip();
-            Ok(MalVal::List(Rc::new(vec![
+            Ok(list!(vec![
                 MalVal::Symbol("quasiquote".to_string()),
                 read_form(rdr)?,
-            ])))
+            ]))
         }
         "~" => {
             rdr.skip();
-            Ok(MalVal::List(Rc::new(vec![
+            Ok(list!(vec![
                 MalVal::Symbol("unquote".to_string()),
                 read_form(rdr)?,
-            ])))
+            ]))
         }
         "~@" => {
             rdr.skip();
-            Ok(MalVal::List(Rc::new(vec![
+            Ok(list!(vec![
                 MalVal::Symbol("splice-unquote".to_string()),
                 read_form(rdr)?,
-            ])))
+            ]))
         }
         "^" => {
             rdr.skip();
             let meta = read_form(rdr)?;
-            Ok(MalVal::List(Rc::new(vec![
+            Ok(list!(vec![
                 MalVal::Symbol("with-meta".to_string()),
                 read_form(rdr)?,
                 meta,
-            ])))
+            ]))
         }
         "@" => {
             rdr.skip();
-            Ok(MalVal::List(Rc::new(vec![
+            Ok(list!(vec![
                 MalVal::Symbol("deref".to_string()),
                 read_form(rdr)?,
-            ])))
+            ]))
         }
         "(" => read_list(rdr),
         "[" => read_vector(rdr),
@@ -181,7 +184,7 @@ fn read_seq(rdr: &mut Reader, c: &str) -> MalReturn {
     }
 
     match c {
-        ")" => Ok(MalVal::List(Rc::new(seq))),
+        ")" => Ok(list!(seq)),
         "]" => Ok(MalVal::Vector(Rc::new(seq))),
         "}" => Ok(MalVal::Hashmap(Rc::new(hmap))),
         _ => Err(MalError::Error(format!("unexpected end of input '{}'", c))),

@@ -7,6 +7,7 @@ use rustyline::DefaultEditor;
 mod evaluation;
 mod printer;
 mod reader;
+#[macro_use]
 mod types;
 
 use crate::types::MalVal;
@@ -29,14 +30,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 args.push(MalVal::Str(arg));
             }
         }
-        let _ = env.borrow_mut().set("*ARGV*", &MalVal::List(Rc::new(args)));
+        let _ = env.borrow_mut().set("*ARGV*", &list!(args));
 
         if let Some(file) = arg1 {
             let _ = builtins::re(&format!("(load-file \"{}\")", file), &env);
             std::process::exit(0);
         }
     } else {
-        let _ = env.borrow_mut().set("*ARGV*", &MalVal::List(Rc::new(args)));
+        let _ = env.borrow_mut().set("*ARGV*", &list!(args));
     }
 
     let mut rl = DefaultEditor::new()?;

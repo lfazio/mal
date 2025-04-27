@@ -33,6 +33,16 @@ pub enum MalVal {
     Atom(Rc<RefCell<MalVal>>),
 }
 
+#[macro_export]
+macro_rules! list {
+    ($x:expr) => {
+        MalVal::List(Rc::new($x))
+    };
+    () => {
+        MalVal::List(Rc::new(vec![]))
+    };
+}
+
 fn escape_str(s: &str) -> String {
     s.chars()
         .map(|c| match c {

@@ -6,6 +6,7 @@ use rustyline::DefaultEditor;
 mod evaluation;
 mod printer;
 mod reader;
+#[macro_use]
 mod types;
 
 use crate::types::MalVal;

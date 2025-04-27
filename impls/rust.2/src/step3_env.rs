@@ -6,8 +6,9 @@ use rustyline::DefaultEditor;
 mod evaluation;
 mod printer;
 mod reader;
-
+#[macro_use]
 mod types;
+
 use types::MalVal;
 use types::environment::MalEnv;
 use types::error::MalError;

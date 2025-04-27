@@ -6,6 +6,9 @@ use super::MalReturn;
 use super::MalVal;
 use super::environment::MalEnv;
 
+// macro to create la list
+use crate::list;
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Lambda {
     eval: MalFunction,
@@ -57,10 +60,9 @@ impl Lambda {
                 }
                 MalVal::Symbol(s) => {
                     if remaining {
-                        let _ =
-                            set_env!(new_env, s, &MalVal::List(Rc::new(argv[i - 1..].to_vec())));
+                        set_env!(new_env, s, &list!(argv[i - 1..].to_vec()));
                     } else {
-                        let _ = set_env!(new_env, s, &argv[i]);
+                        set_env!(new_env, s, &argv[i]);
                     }
                 }
                 _ => (),

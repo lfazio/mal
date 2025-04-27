@@ -89,7 +89,7 @@ fn quasiquote_iter(list: &Rc<Vec<MalVal>>) -> MalReturn {
                 new_list = vec![
                     MalVal::Symbol("concat".to_string()),
                     seq[1].clone(),
-                    MalVal::List(Rc::new(new_list)),
+                    list!(new_list),
                 ];
                 continue;
             }
@@ -98,11 +98,11 @@ fn quasiquote_iter(list: &Rc<Vec<MalVal>>) -> MalReturn {
         new_list = vec![
             MalVal::Symbol("cons".to_string()),
             quasiquote(elt)?,
-            MalVal::List(Rc::new(new_list.clone())),
+            list!(new_list.clone()),
         ];
     }
 
-    Ok(MalVal::List(Rc::new(new_list)))
+    Ok(list!(new_list))
 }
 
 pub fn quasiquote(ast: &MalVal) -> MalReturn {
@@ -118,15 +118,15 @@ pub fn quasiquote(ast: &MalVal) -> MalReturn {
         new_list.insert(0, ast.clone());
         new_list.insert(0, MalVal::Symbol("quote".to_string()));
 
-        Ok(MalVal::List(Rc::new(new_list)))
+        Ok(list!(new_list))
     } else if let MalVal::Hashmap(_) = ast {
         new_list = vec![MalVal::Symbol("quote".to_string()), ast.clone()];
 
-        Ok(MalVal::List(Rc::new(new_list)))
+        Ok(list!(new_list))
     } else if let MalVal::Vector(seq) = ast {
         new_list = vec![MalVal::Symbol("vec".to_string()), quasiquote_iter(seq)?];
 
-        Ok(MalVal::List(Rc::new(new_list)))
+        Ok(list!(new_list))
     } else {
         Ok(ast.clone())
     }
