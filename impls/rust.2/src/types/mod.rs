@@ -43,6 +43,16 @@ macro_rules! list {
     };
 }
 
+#[macro_export]
+macro_rules! vector {
+    ($x:expr) => {
+        MalVal::Vector(Rc::new($x))
+    };
+    () => {
+        MalVal::Vector(Rc::new(vec![]))
+    };
+}
+
 fn escape_str(s: &str) -> String {
     s.chars()
         .map(|c| match c {

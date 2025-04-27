@@ -10,6 +10,7 @@ use crate::types::{MalReturn, MalVal};
 use crate::builtins;
 
 use crate::list;
+use crate::vector;
 
 pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
     let mut ast = input?;
@@ -37,7 +38,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                     s.push(eval(Ok(v.clone()), env)?);
                 }
 
-                return Ok(MalVal::Vector(Rc::new(s)));
+                return Ok(vector!(s));
             }
             MalVal::List(l) => {
                 if l.is_empty() {

@@ -7,6 +7,7 @@ use crate::types::{MalReturn, MalVal};
 
 // macro to create la list
 use crate::list;
+use crate::vector;
 
 pub fn register(env: &Rc<RefCell<MalEnv>>) {
     builtin_register!(env, "apply", apply);
@@ -58,7 +59,7 @@ fn is_list(args: &[MalVal]) -> MalReturn {
 }
 
 fn vector(args: &[MalVal]) -> MalReturn {
-    Ok(MalVal::Vector(Rc::new(args.to_vec())))
+    Ok(vector!(args.to_vec()))
 }
 
 fn is_vector(args: &[MalVal]) -> MalReturn {
@@ -207,7 +208,7 @@ fn vec(args: &[MalVal]) -> MalReturn {
 
     if let MalVal::List(l) = &args[0] {
         let vec: Vec<MalVal> = l.iter().cloned().collect();
-        return Ok(MalVal::Vector(Rc::new(vec)));
+        return Ok(vector!(vec));
     }
 
     if let MalVal::Vector(_) = &args[0] {

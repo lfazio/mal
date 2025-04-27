@@ -9,8 +9,8 @@ use crate::types::MalReturn;
 use crate::types::MalVal;
 use crate::types::error::MalError;
 
-// macro to create a list
 use crate::list;
+use crate::vector;
 
 struct Reader {
     tokens: Vec<String>,
@@ -185,7 +185,7 @@ fn read_seq(rdr: &mut Reader, c: &str) -> MalReturn {
 
     match c {
         ")" => Ok(list!(seq)),
-        "]" => Ok(MalVal::Vector(Rc::new(seq))),
+        "]" => Ok(vector!(seq)),
         "}" => Ok(MalVal::Hashmap(Rc::new(hmap))),
         _ => Err(MalError::Error(format!("unexpected end of input '{}'", c))),
     }
