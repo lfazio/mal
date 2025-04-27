@@ -9,6 +9,7 @@ use crate::types::MalReturn;
 use crate::types::MalVal;
 use crate::types::error::MalError;
 
+use crate::hashmap;
 use crate::list;
 use crate::vector;
 
@@ -186,7 +187,7 @@ fn read_seq(rdr: &mut Reader, c: &str) -> MalReturn {
     match c {
         ")" => Ok(list!(seq)),
         "]" => Ok(vector!(seq)),
-        "}" => Ok(MalVal::Hashmap(Rc::new(hmap))),
+        "}" => Ok(hashmap!(hmap)),
         _ => Err(MalError::Error(format!("unexpected end of input '{}'", c))),
     }
 }

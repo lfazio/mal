@@ -53,6 +53,16 @@ macro_rules! vector {
     };
 }
 
+#[macro_export]
+macro_rules! hashmap{
+    ($x:expr) => {
+        MalVal::Hashmap(Rc::new($x))
+    };
+    () => {
+        MalVal::Hashmap(Rc::new(HashMap::new()))
+    };
+}
+
 fn escape_str(s: &str) -> String {
     s.chars()
         .map(|c| match c {

@@ -9,6 +9,7 @@ use crate::types::{MalReturn, MalVal};
 
 use crate::builtins;
 
+use crate::hashmap;
 use crate::list;
 use crate::vector;
 
@@ -243,7 +244,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                     new_hm.entry(k).insert_entry(eval(Ok(v), env).unwrap());
                 }
 
-                return Ok(MalVal::Hashmap(Rc::new(new_hm)));
+                return Ok(hashmap!(new_hm));
             }
             _ => return Ok(ast),
         }

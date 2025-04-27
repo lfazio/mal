@@ -424,7 +424,7 @@ fn hash_map(args: &[MalVal]) -> MalReturn {
         }
     }
 
-    Ok(MalVal::Hashmap(Rc::new(map)))
+    Ok(hashmap!(map))
 }
 
 fn is_map(args: &[MalVal]) -> MalReturn {
@@ -464,7 +464,7 @@ fn assoc(args: &[MalVal]) -> MalReturn {
                 return Err(MalError::Error("assoc expects string keys".to_string()));
             }
         }
-        return Ok(MalVal::Hashmap(Rc::new(new_map)));
+        return Ok(hashmap!(new_map));
     }
 
     Err(MalError::Error(
@@ -492,7 +492,7 @@ fn dissoc(args: &[MalVal]) -> MalReturn {
                 return Err(MalError::Error("dissoc expects string keys".to_string()));
             }
         }
-        return Ok(MalVal::Hashmap(Rc::new(new_map)));
+        return Ok(hashmap!(new_map));
     }
 
     Err(MalError::Error(
