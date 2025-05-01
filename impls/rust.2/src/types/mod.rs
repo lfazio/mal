@@ -63,6 +63,13 @@ macro_rules! hashmap{
     };
 }
 
+#[macro_export]
+macro_rules! lambda{
+    ($x:expr) => {
+        MalVal::Lambda(Rc::new($x))
+    };
+}
+
 fn escape_str(s: &str) -> String {
     s.chars()
         .map(|c| match c {

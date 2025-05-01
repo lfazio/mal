@@ -10,6 +10,7 @@ use crate::types::{MalReturn, MalVal};
 use crate::builtins;
 
 use crate::hashmap;
+use crate::lambda;
 use crate::list;
 use crate::vector;
 
@@ -63,12 +64,12 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                                 let args = l.get_args();
                                 return env.borrow_mut().set(
                                     &key.pr_str(true),
-                                    &MalVal::Lambda(Rc::new(Lambda::new_macro(
+                                    &lambda!(Lambda::new_macro(
                                         eval,
                                         l.get_ast(),
                                         list!(args),
                                         Rc::clone(env),
-                                    ))),
+                                    )),
                                 );
                             }
                             _ => {
@@ -126,12 +127,12 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                     MalVal::Symbol(s) if s == "fn*" => {
                         let args = l[1].clone();
 
-                        return Ok(MalVal::Lambda(Rc::new(Lambda::new(
+                        return Ok(lambda!(Lambda::new(
                             eval,
                             l[2].clone(),
                             args,
                             Rc::clone(env),
-                        ))));
+                        )));
                     }
                     MalVal::Symbol(s) if s == "eval" => {
                         let args = l[1].clone();
