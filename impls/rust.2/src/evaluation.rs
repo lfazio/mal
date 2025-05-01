@@ -12,6 +12,7 @@ use crate::builtins;
 use crate::hashmap;
 use crate::lambda;
 use crate::list;
+use crate::new_env;
 use crate::vector;
 
 pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
@@ -85,7 +86,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
 
                         match bindings {
                             MalVal::List(bindings) | MalVal::Vector(bindings) => {
-                                new_env = Rc::new(RefCell::new(MalEnv::new(Some(Rc::clone(env)))));
+                                new_env = new_env!(Some(Rc::clone(env)));
                                 for i in (0..bindings.len()).step_by(2) {
                                     let key = bindings[i].clone();
                                     let val = eval(Ok(bindings[i + 1].clone()), &new_env)?;
@@ -186,9 +187,7 @@ pub fn eval(input: MalReturn, env: &Rc<RefCell<MalEnv>>) -> MalReturn {
                                         };
                                         let c = seq[2].clone();
 
-                                        new_env = Rc::new(RefCell::new(MalEnv::new(Some(
-                                            Rc::clone(env),
-                                        ))));
+                                        new_env = new_env!(Some(Rc::clone(env)));
                                         new_env.borrow_mut().set(&b, &exc)?;
                                         ast = c;
                                         env = &new_env;

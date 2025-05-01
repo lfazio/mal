@@ -59,3 +59,10 @@ macro_rules! get_env {
         $env.get($key)
     };
 }
+
+#[macro_export]
+macro_rules! new_env {
+    ($env:expr) => {
+        Rc::new(RefCell::new(MalEnv::new($env)))
+    };
+}

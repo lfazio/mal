@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("No previous history.");
     }
 
-    let env = Rc::new(RefCell::new(MalEnv::new(None)));
+    let env = new_env!(None);
     builtins::register(&env);
 
     // REPL

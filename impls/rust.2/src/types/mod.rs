@@ -54,7 +54,7 @@ macro_rules! vector {
 }
 
 #[macro_export]
-macro_rules! hashmap{
+macro_rules! hashmap {
     ($x:expr) => {
         MalVal::Hashmap(Rc::new($x))
     };
@@ -64,7 +64,7 @@ macro_rules! hashmap{
 }
 
 #[macro_export]
-macro_rules! lambda{
+macro_rules! lambda {
     ($x:expr) => {
         MalVal::Lambda(Rc::new($x))
     };
